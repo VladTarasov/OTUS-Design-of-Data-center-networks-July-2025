@@ -23,6 +23,12 @@
 
 # **Конфигурация**
 
+Общие замечания:
+- На всех маршрутизаторах создается процесс ospf под номером 1.
+- Так как рассматривается топология с единственным POD, то используется только backbone area 0.
+- Loopback-интефейсы являются пассивными.
+- Используется аутентификация md5.
+- На соединениях Spine-Leaf используется тип сети point-to-point.
 ```
 Spine1#sh run | s r ospf
 interface Ethernet1
@@ -48,43 +54,6 @@ router ospf 1
    no passive-interface Ethernet2
    no passive-interface Ethernet3
    max-lsa 12000
-
-Spine1#sh ip ospf nei
-Neighbor ID     Instance VRF      Pri State                  Dead Time   Address         Interface
-10.0.1.1        1        default  0   FULL                   00:00:30    10.2.1.1        Ethernet1
-10.0.1.2        1        default  0   FULL                   00:00:35    10.2.1.3        Ethernet2
-10.0.1.3        1        default  0   FULL                   00:00:38    10.2.1.5        Ethernet3
-
-Spine1#sh ip route ospf
-
-VRF: default
-Codes: C - connected, S - static, K - kernel,
-       O - OSPF, IA - OSPF inter area, E1 - OSPF external type 1,
-       E2 - OSPF external type 2, N1 - OSPF NSSA external type 1,
-       N2 - OSPF NSSA external type2, B - Other BGP Routes,
-       B I - iBGP, B E - eBGP, R - RIP, I L1 - IS-IS level 1,
-       I L2 - IS-IS level 2, O3 - OSPFv3, A B - BGP Aggregate,
-       A O - OSPF Summary, NG - Nexthop Group Static Route,
-       V - VXLAN Control Service, M - Martian,
-       DH - DHCP client installed default route,
-       DP - Dynamic Policy Route, L - VRF Leaked,
-       G  - gRIBI, RC - Route Cache Route
-
- O        10.0.1.1/32 [110/20] via 10.2.1.1, Ethernet1
- O        10.0.1.2/32 [110/20] via 10.2.1.3, Ethernet2
- O        10.0.1.3/32 [110/20] via 10.2.1.5, Ethernet3
- O        10.0.2.0/32 [110/30] via 10.2.1.1, Ethernet1
-                               via 10.2.1.3, Ethernet2
-                               via 10.2.1.5, Ethernet3
- O        10.1.1.1/32 [110/20] via 10.2.1.1, Ethernet1
- O        10.1.1.2/32 [110/20] via 10.2.1.3, Ethernet2
- O        10.1.1.3/32 [110/20] via 10.2.1.5, Ethernet3
- O        10.1.2.0/32 [110/30] via 10.2.1.1, Ethernet1
-                               via 10.2.1.3, Ethernet2
-                               via 10.2.1.5, Ethernet3
- O        10.2.2.0/31 [110/20] via 10.2.1.1, Ethernet1
- O        10.2.2.2/31 [110/20] via 10.2.1.3, Ethernet2
- O        10.2.2.4/31 [110/20] via 10.2.1.5, Ethernet3
 
 Spine2#sh run | s r ospf
 interface Ethernet1
@@ -322,9 +291,49 @@ Codes: C - connected, S - static, K - kernel,
 
 # **Проверка работоспособности**
 
-С Spine1 выполняем просверку доступности всех loopback интерфейсов Spine2 и Leaf1-3:
+Проверяем соблюдение следующих условий:
+- На каждем Spine установлены соседсва с Leaf1-3, состояние FULL.
+- В таблице маршрутизации присутствует несколько маршурутов до looback-интерфейсов и маршруты p2p линков.
+- С Spine1 выполняем доступны все loopback интерфейсы Spine2 и Leaf1-3.
 
 ```
+Spine1#sh ip ospf nei
+Neighbor ID     Instance VRF      Pri State                  Dead Time   Address         Interface
+10.0.1.1        1        default  0   FULL                   00:00:30    10.2.1.1        Ethernet1
+10.0.1.2        1        default  0   FULL                   00:00:35    10.2.1.3        Ethernet2
+10.0.1.3        1        default  0   FULL                   00:00:38    10.2.1.5        Ethernet3
+
+Spine1#sh ip route ospf
+
+VRF: default
+Codes: C - connected, S - static, K - kernel,
+       O - OSPF, IA - OSPF inter area, E1 - OSPF external type 1,
+       E2 - OSPF external type 2, N1 - OSPF NSSA external type 1,
+       N2 - OSPF NSSA external type2, B - Other BGP Routes,
+       B I - iBGP, B E - eBGP, R - RIP, I L1 - IS-IS level 1,
+       I L2 - IS-IS level 2, O3 - OSPFv3, A B - BGP Aggregate,
+       A O - OSPF Summary, NG - Nexthop Group Static Route,
+       V - VXLAN Control Service, M - Martian,
+       DH - DHCP client installed default route,
+       DP - Dynamic Policy Route, L - VRF Leaked,
+       G  - gRIBI, RC - Route Cache Route
+
+ O        10.0.1.1/32 [110/20] via 10.2.1.1, Ethernet1
+ O        10.0.1.2/32 [110/20] via 10.2.1.3, Ethernet2
+ O        10.0.1.3/32 [110/20] via 10.2.1.5, Ethernet3
+ O        10.0.2.0/32 [110/30] via 10.2.1.1, Ethernet1
+                               via 10.2.1.3, Ethernet2
+                               via 10.2.1.5, Ethernet3
+ O        10.1.1.1/32 [110/20] via 10.2.1.1, Ethernet1
+ O        10.1.1.2/32 [110/20] via 10.2.1.3, Ethernet2
+ O        10.1.1.3/32 [110/20] via 10.2.1.5, Ethernet3
+ O        10.1.2.0/32 [110/30] via 10.2.1.1, Ethernet1
+                               via 10.2.1.3, Ethernet2
+                               via 10.2.1.5, Ethernet3
+ O        10.2.2.0/31 [110/20] via 10.2.1.1, Ethernet1
+ O        10.2.2.2/31 [110/20] via 10.2.1.3, Ethernet2
+ O        10.2.2.4/31 [110/20] via 10.2.1.5, Ethernet3
+
 Spine1#ping 10.0.2.0
 PING 10.0.2.0 (10.0.2.0) 72(100) bytes of data.
 80 bytes from 10.0.2.0: icmp_seq=1 ttl=63 time=10.4 ms
