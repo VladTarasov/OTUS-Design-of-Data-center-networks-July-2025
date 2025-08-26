@@ -1,6 +1,6 @@
 # **Диаграмма сети**
 
-<img width="1739" height="1203" alt="image" src="https://github.com/user-attachments/assets/577bb2f3-46dc-43a5-b4a8-930646e7b515" />
+<img width="1637" height="1128" alt="image" src="https://github.com/user-attachments/assets/9ac21069-b2e0-4aeb-a2fe-11b4ceec0141" />
 
 # **Адресный план**
 
