@@ -80,43 +80,6 @@ router ospf 1
    no passive-interface Ethernet3
    max-lsa 12000
 
-Spine2#sh ip ospf ne
-Neighbor ID     Instance VRF      Pri State                  Dead Time   Address         Interface
-10.0.1.1        1        default  0   FULL                   00:00:35    10.2.2.1        Ethernet1
-10.0.1.2        1        default  0   FULL                   00:00:32    10.2.2.3        Ethernet2
-10.0.1.3        1        default  0   FULL                   00:00:35    10.2.2.5        Ethernet3
-
-Spine2#sh ip route ospf
-
-VRF: default
-Codes: C - connected, S - static, K - kernel,
-       O - OSPF, IA - OSPF inter area, E1 - OSPF external type 1,
-       E2 - OSPF external type 2, N1 - OSPF NSSA external type 1,
-       N2 - OSPF NSSA external type2, B - Other BGP Routes,
-       B I - iBGP, B E - eBGP, R - RIP, I L1 - IS-IS level 1,
-       I L2 - IS-IS level 2, O3 - OSPFv3, A B - BGP Aggregate,
-       A O - OSPF Summary, NG - Nexthop Group Static Route,
-       V - VXLAN Control Service, M - Martian,
-       DH - DHCP client installed default route,
-       DP - Dynamic Policy Route, L - VRF Leaked,
-       G  - gRIBI, RC - Route Cache Route
-
- O        10.0.1.0/32 [110/30] via 10.2.2.1, Ethernet1
-                               via 10.2.2.3, Ethernet2
-                               via 10.2.2.5, Ethernet3
- O        10.0.1.1/32 [110/20] via 10.2.2.1, Ethernet1
- O        10.0.1.2/32 [110/20] via 10.2.2.3, Ethernet2
- O        10.0.1.3/32 [110/20] via 10.2.2.5, Ethernet3
- O        10.1.1.0/32 [110/30] via 10.2.2.1, Ethernet1
-                               via 10.2.2.3, Ethernet2
-                               via 10.2.2.5, Ethernet3
- O        10.1.1.1/32 [110/20] via 10.2.2.1, Ethernet1
- O        10.1.1.2/32 [110/20] via 10.2.2.3, Ethernet2
- O        10.1.1.3/32 [110/20] via 10.2.2.5, Ethernet3
- O        10.2.1.0/31 [110/20] via 10.2.2.1, Ethernet1
- O        10.2.1.2/31 [110/20] via 10.2.2.3, Ethernet2
- O        10.2.1.4/31 [110/20] via 10.2.2.5, Ethernet3
-
 Leaf1#sh run | s r ospf
 interface Ethernet1
    ip ospf network point-to-point
@@ -136,43 +99,6 @@ router ospf 1
    no passive-interface Ethernet1
    no passive-interface Ethernet2
    max-lsa 12000
-
-Leaf1#sh ip ospf nei
-Neighbor ID     Instance VRF      Pri State                  Dead Time   Address         Interface
-10.0.1.0        1        default  0   FULL                   00:00:35    10.2.1.0        Ethernet1
-10.0.2.0        1        default  0   FULL                   00:00:29    10.2.2.0        Ethernet2
-
-Leaf1#sh ip route ospf
-
-VRF: default
-Codes: C - connected, S - static, K - kernel,
-       O - OSPF, IA - OSPF inter area, E1 - OSPF external type 1,
-       E2 - OSPF external type 2, N1 - OSPF NSSA external type 1,
-       N2 - OSPF NSSA external type2, B - Other BGP Routes,
-       B I - iBGP, B E - eBGP, R - RIP, I L1 - IS-IS level 1,
-       I L2 - IS-IS level 2, O3 - OSPFv3, A B - BGP Aggregate,
-       A O - OSPF Summary, NG - Nexthop Group Static Route,
-       V - VXLAN Control Service, M - Martian,
-       DH - DHCP client installed default route,
-       DP - Dynamic Policy Route, L - VRF Leaked,
-       G  - gRIBI, RC - Route Cache Route
-
- O        10.0.1.0/32 [110/20] via 10.2.1.0, Ethernet1
- O        10.0.1.2/32 [110/30] via 10.2.1.0, Ethernet1
-                               via 10.2.2.0, Ethernet2
- O        10.0.1.3/32 [110/30] via 10.2.1.0, Ethernet1
-                               via 10.2.2.0, Ethernet2
- O        10.0.2.0/32 [110/20] via 10.2.2.0, Ethernet2
- O        10.1.1.0/32 [110/20] via 10.2.1.0, Ethernet1
- O        10.1.1.2/32 [110/30] via 10.2.1.0, Ethernet1
-                               via 10.2.2.0, Ethernet2
- O        10.1.1.3/32 [110/30] via 10.2.1.0, Ethernet1
-                               via 10.2.2.0, Ethernet2
- O        10.1.2.0/32 [110/20] via 10.2.2.0, Ethernet2
- O        10.2.1.2/31 [110/20] via 10.2.1.0, Ethernet1
- O        10.2.1.4/31 [110/20] via 10.2.1.0, Ethernet1
- O        10.2.2.2/31 [110/20] via 10.2.2.0, Ethernet2
- O        10.2.2.4/31 [110/20] via 10.2.2.0, Ethernet2
 
 Leaf2#sh run | s r ospf
 interface Ethernet1
@@ -194,43 +120,6 @@ router ospf 1
    no passive-interface Ethernet2
    max-lsa 12000
 
-Leaf2#sh ip ospf nei
-Neighbor ID     Instance VRF      Pri State                  Dead Time   Address         Interface
-10.0.1.0        1        default  0   FULL                   00:00:30    10.2.1.2        Ethernet1
-10.0.2.0        1        default  0   FULL                   00:00:33    10.2.2.2        Ethernet2
-
-Leaf2# sh ip route ospf
-
-VRF: default
-Codes: C - connected, S - static, K - kernel,
-       O - OSPF, IA - OSPF inter area, E1 - OSPF external type 1,
-       E2 - OSPF external type 2, N1 - OSPF NSSA external type 1,
-       N2 - OSPF NSSA external type2, B - Other BGP Routes,
-       B I - iBGP, B E - eBGP, R - RIP, I L1 - IS-IS level 1,
-       I L2 - IS-IS level 2, O3 - OSPFv3, A B - BGP Aggregate,
-       A O - OSPF Summary, NG - Nexthop Group Static Route,
-       V - VXLAN Control Service, M - Martian,
-       DH - DHCP client installed default route,
-       DP - Dynamic Policy Route, L - VRF Leaked,
-       G  - gRIBI, RC - Route Cache Route
-
- O        10.0.1.0/32 [110/20] via 10.2.1.2, Ethernet1
- O        10.0.1.1/32 [110/30] via 10.2.1.2, Ethernet1
-                               via 10.2.2.2, Ethernet2
- O        10.0.1.3/32 [110/30] via 10.2.1.2, Ethernet1
-                               via 10.2.2.2, Ethernet2
- O        10.0.2.0/32 [110/20] via 10.2.2.2, Ethernet2
- O        10.1.1.0/32 [110/20] via 10.2.1.2, Ethernet1
- O        10.1.1.1/32 [110/30] via 10.2.1.2, Ethernet1
-                               via 10.2.2.2, Ethernet2
- O        10.1.1.3/32 [110/30] via 10.2.1.2, Ethernet1
-                               via 10.2.2.2, Ethernet2
- O        10.1.2.0/32 [110/20] via 10.2.2.2, Ethernet2
- O        10.2.1.0/31 [110/20] via 10.2.1.2, Ethernet1
- O        10.2.1.4/31 [110/20] via 10.2.1.2, Ethernet1
- O        10.2.2.0/31 [110/20] via 10.2.2.2, Ethernet2
- O        10.2.2.4/31 [110/20] via 10.2.2.2, Ethernet2
-
 Leaf3#sh run | s r ospf
 interface Ethernet1
    ip ospf network point-to-point
@@ -250,43 +139,6 @@ router ospf 1
    no passive-interface Ethernet1
    no passive-interface Ethernet2
    max-lsa 12000
-
-Leaf3#sh ip ospf nei
-Neighbor ID     Instance VRF      Pri State                  Dead Time   Address         Interface
-10.0.1.0        1        default  0   FULL                   00:00:32    10.2.1.4        Ethernet1
-10.0.2.0        1        default  0   FULL                   00:00:30    10.2.2.4        Ethernet2
-
-Leaf3#sh ip route ospf
-
-VRF: default
-Codes: C - connected, S - static, K - kernel,
-       O - OSPF, IA - OSPF inter area, E1 - OSPF external type 1,
-       E2 - OSPF external type 2, N1 - OSPF NSSA external type 1,
-       N2 - OSPF NSSA external type2, B - Other BGP Routes,
-       B I - iBGP, B E - eBGP, R - RIP, I L1 - IS-IS level 1,
-       I L2 - IS-IS level 2, O3 - OSPFv3, A B - BGP Aggregate,
-       A O - OSPF Summary, NG - Nexthop Group Static Route,
-       V - VXLAN Control Service, M - Martian,
-       DH - DHCP client installed default route,
-       DP - Dynamic Policy Route, L - VRF Leaked,
-       G  - gRIBI, RC - Route Cache Route
-
- O        10.0.1.0/32 [110/20] via 10.2.1.4, Ethernet1
- O        10.0.1.1/32 [110/30] via 10.2.1.4, Ethernet1
-                               via 10.2.2.4, Ethernet2
- O        10.0.1.2/32 [110/30] via 10.2.1.4, Ethernet1
-                               via 10.2.2.4, Ethernet2
- O        10.0.2.0/32 [110/20] via 10.2.2.4, Ethernet2
- O        10.1.1.0/32 [110/20] via 10.2.1.4, Ethernet1
- O        10.1.1.1/32 [110/30] via 10.2.1.4, Ethernet1
-                               via 10.2.2.4, Ethernet2
- O        10.1.1.2/32 [110/30] via 10.2.1.4, Ethernet1
-                               via 10.2.2.4, Ethernet2
- O        10.1.2.0/32 [110/20] via 10.2.2.4, Ethernet2
- O        10.2.1.0/31 [110/20] via 10.2.1.4, Ethernet1
- O        10.2.1.2/31 [110/20] via 10.2.1.4, Ethernet1
- O        10.2.2.0/31 [110/20] via 10.2.2.4, Ethernet2
- O        10.2.2.2/31 [110/20] via 10.2.2.4, Ethernet2
 ```
 
 # **Проверка работоспособности**
@@ -333,6 +185,155 @@ Codes: C - connected, S - static, K - kernel,
  O        10.2.2.0/31 [110/20] via 10.2.1.1, Ethernet1
  O        10.2.2.2/31 [110/20] via 10.2.1.3, Ethernet2
  O        10.2.2.4/31 [110/20] via 10.2.1.5, Ethernet3
+
+Spine2#sh ip ospf ne
+Neighbor ID     Instance VRF      Pri State                  Dead Time   Address         Interface
+10.0.1.1        1        default  0   FULL                   00:00:35    10.2.2.1        Ethernet1
+10.0.1.2        1        default  0   FULL                   00:00:32    10.2.2.3        Ethernet2
+10.0.1.3        1        default  0   FULL                   00:00:35    10.2.2.5        Ethernet3
+
+Spine2#sh ip route ospf
+
+VRF: default
+Codes: C - connected, S - static, K - kernel,
+       O - OSPF, IA - OSPF inter area, E1 - OSPF external type 1,
+       E2 - OSPF external type 2, N1 - OSPF NSSA external type 1,
+       N2 - OSPF NSSA external type2, B - Other BGP Routes,
+       B I - iBGP, B E - eBGP, R - RIP, I L1 - IS-IS level 1,
+       I L2 - IS-IS level 2, O3 - OSPFv3, A B - BGP Aggregate,
+       A O - OSPF Summary, NG - Nexthop Group Static Route,
+       V - VXLAN Control Service, M - Martian,
+       DH - DHCP client installed default route,
+       DP - Dynamic Policy Route, L - VRF Leaked,
+       G  - gRIBI, RC - Route Cache Route
+
+ O        10.0.1.0/32 [110/30] via 10.2.2.1, Ethernet1
+                               via 10.2.2.3, Ethernet2
+                               via 10.2.2.5, Ethernet3
+ O        10.0.1.1/32 [110/20] via 10.2.2.1, Ethernet1
+ O        10.0.1.2/32 [110/20] via 10.2.2.3, Ethernet2
+ O        10.0.1.3/32 [110/20] via 10.2.2.5, Ethernet3
+ O        10.1.1.0/32 [110/30] via 10.2.2.1, Ethernet1
+                               via 10.2.2.3, Ethernet2
+                               via 10.2.2.5, Ethernet3
+ O        10.1.1.1/32 [110/20] via 10.2.2.1, Ethernet1
+ O        10.1.1.2/32 [110/20] via 10.2.2.3, Ethernet2
+ O        10.1.1.3/32 [110/20] via 10.2.2.5, Ethernet3
+ O        10.2.1.0/31 [110/20] via 10.2.2.1, Ethernet1
+ O        10.2.1.2/31 [110/20] via 10.2.2.3, Ethernet2
+ O        10.2.1.4/31 [110/20] via 10.2.2.5, Ethernet3
+
+Leaf1#sh ip ospf nei
+Neighbor ID     Instance VRF      Pri State                  Dead Time   Address         Interface
+10.0.1.0        1        default  0   FULL                   00:00:35    10.2.1.0        Ethernet1
+10.0.2.0        1        default  0   FULL                   00:00:29    10.2.2.0        Ethernet2
+
+Leaf1#sh ip route ospf
+
+VRF: default
+Codes: C - connected, S - static, K - kernel,
+       O - OSPF, IA - OSPF inter area, E1 - OSPF external type 1,
+       E2 - OSPF external type 2, N1 - OSPF NSSA external type 1,
+       N2 - OSPF NSSA external type2, B - Other BGP Routes,
+       B I - iBGP, B E - eBGP, R - RIP, I L1 - IS-IS level 1,
+       I L2 - IS-IS level 2, O3 - OSPFv3, A B - BGP Aggregate,
+       A O - OSPF Summary, NG - Nexthop Group Static Route,
+       V - VXLAN Control Service, M - Martian,
+       DH - DHCP client installed default route,
+       DP - Dynamic Policy Route, L - VRF Leaked,
+       G  - gRIBI, RC - Route Cache Route
+
+ O        10.0.1.0/32 [110/20] via 10.2.1.0, Ethernet1
+ O        10.0.1.2/32 [110/30] via 10.2.1.0, Ethernet1
+                               via 10.2.2.0, Ethernet2
+ O        10.0.1.3/32 [110/30] via 10.2.1.0, Ethernet1
+                               via 10.2.2.0, Ethernet2
+ O        10.0.2.0/32 [110/20] via 10.2.2.0, Ethernet2
+ O        10.1.1.0/32 [110/20] via 10.2.1.0, Ethernet1
+ O        10.1.1.2/32 [110/30] via 10.2.1.0, Ethernet1
+                               via 10.2.2.0, Ethernet2
+ O        10.1.1.3/32 [110/30] via 10.2.1.0, Ethernet1
+                               via 10.2.2.0, Ethernet2
+ O        10.1.2.0/32 [110/20] via 10.2.2.0, Ethernet2
+ O        10.2.1.2/31 [110/20] via 10.2.1.0, Ethernet1
+ O        10.2.1.4/31 [110/20] via 10.2.1.0, Ethernet1
+ O        10.2.2.2/31 [110/20] via 10.2.2.0, Ethernet2
+ O        10.2.2.4/31 [110/20] via 10.2.2.0, Ethernet2
+
+Leaf2#sh ip ospf nei
+Neighbor ID     Instance VRF      Pri State                  Dead Time   Address         Interface
+10.0.1.0        1        default  0   FULL                   00:00:30    10.2.1.2        Ethernet1
+10.0.2.0        1        default  0   FULL                   00:00:33    10.2.2.2        Ethernet2
+
+Leaf2# sh ip route ospf
+
+VRF: default
+Codes: C - connected, S - static, K - kernel,
+       O - OSPF, IA - OSPF inter area, E1 - OSPF external type 1,
+       E2 - OSPF external type 2, N1 - OSPF NSSA external type 1,
+       N2 - OSPF NSSA external type2, B - Other BGP Routes,
+       B I - iBGP, B E - eBGP, R - RIP, I L1 - IS-IS level 1,
+       I L2 - IS-IS level 2, O3 - OSPFv3, A B - BGP Aggregate,
+       A O - OSPF Summary, NG - Nexthop Group Static Route,
+       V - VXLAN Control Service, M - Martian,
+       DH - DHCP client installed default route,
+       DP - Dynamic Policy Route, L - VRF Leaked,
+       G  - gRIBI, RC - Route Cache Route
+
+ O        10.0.1.0/32 [110/20] via 10.2.1.2, Ethernet1
+ O        10.0.1.1/32 [110/30] via 10.2.1.2, Ethernet1
+                               via 10.2.2.2, Ethernet2
+ O        10.0.1.3/32 [110/30] via 10.2.1.2, Ethernet1
+                               via 10.2.2.2, Ethernet2
+ O        10.0.2.0/32 [110/20] via 10.2.2.2, Ethernet2
+ O        10.1.1.0/32 [110/20] via 10.2.1.2, Ethernet1
+ O        10.1.1.1/32 [110/30] via 10.2.1.2, Ethernet1
+                               via 10.2.2.2, Ethernet2
+ O        10.1.1.3/32 [110/30] via 10.2.1.2, Ethernet1
+                               via 10.2.2.2, Ethernet2
+ O        10.1.2.0/32 [110/20] via 10.2.2.2, Ethernet2
+ O        10.2.1.0/31 [110/20] via 10.2.1.2, Ethernet1
+ O        10.2.1.4/31 [110/20] via 10.2.1.2, Ethernet1
+ O        10.2.2.0/31 [110/20] via 10.2.2.2, Ethernet2
+ O        10.2.2.4/31 [110/20] via 10.2.2.2, Ethernet2
+
+Leaf3#sh ip ospf nei
+Neighbor ID     Instance VRF      Pri State                  Dead Time   Address         Interface
+10.0.1.0        1        default  0   FULL                   00:00:32    10.2.1.4        Ethernet1
+10.0.2.0        1        default  0   FULL                   00:00:30    10.2.2.4        Ethernet2
+
+Leaf3#sh ip route ospf
+
+VRF: default
+Codes: C - connected, S - static, K - kernel,
+       O - OSPF, IA - OSPF inter area, E1 - OSPF external type 1,
+       E2 - OSPF external type 2, N1 - OSPF NSSA external type 1,
+       N2 - OSPF NSSA external type2, B - Other BGP Routes,
+       B I - iBGP, B E - eBGP, R - RIP, I L1 - IS-IS level 1,
+       I L2 - IS-IS level 2, O3 - OSPFv3, A B - BGP Aggregate,
+       A O - OSPF Summary, NG - Nexthop Group Static Route,
+       V - VXLAN Control Service, M - Martian,
+       DH - DHCP client installed default route,
+       DP - Dynamic Policy Route, L - VRF Leaked,
+       G  - gRIBI, RC - Route Cache Route
+
+ O        10.0.1.0/32 [110/20] via 10.2.1.4, Ethernet1
+ O        10.0.1.1/32 [110/30] via 10.2.1.4, Ethernet1
+                               via 10.2.2.4, Ethernet2
+ O        10.0.1.2/32 [110/30] via 10.2.1.4, Ethernet1
+                               via 10.2.2.4, Ethernet2
+ O        10.0.2.0/32 [110/20] via 10.2.2.4, Ethernet2
+ O        10.1.1.0/32 [110/20] via 10.2.1.4, Ethernet1
+ O        10.1.1.1/32 [110/30] via 10.2.1.4, Ethernet1
+                               via 10.2.2.4, Ethernet2
+ O        10.1.1.2/32 [110/30] via 10.2.1.4, Ethernet1
+                               via 10.2.2.4, Ethernet2
+ O        10.1.2.0/32 [110/20] via 10.2.2.4, Ethernet2
+ O        10.2.1.0/31 [110/20] via 10.2.1.4, Ethernet1
+ O        10.2.1.2/31 [110/20] via 10.2.1.4, Ethernet1
+ O        10.2.2.0/31 [110/20] via 10.2.2.4, Ethernet2
+ O        10.2.2.2/31 [110/20] via 10.2.2.4, Ethernet2
+
 
 Spine1#ping 10.0.2.0
 PING 10.0.2.0 (10.0.2.0) 72(100) bytes of data.
