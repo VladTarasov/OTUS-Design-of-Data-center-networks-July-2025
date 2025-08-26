@@ -33,14 +33,17 @@
 ```
 Spine1#sh run | s r ospf
 interface Ethernet1
+   ip ospf neighbor bfd
    ip ospf network point-to-point
    ip ospf area 0.0.0.0
    ip ospf message-digest-key 1 md5 7 syd9D76nV5B/SVQeMxRyDg==
 interface Ethernet2
+   ip ospf neighbor bfd
    ip ospf network point-to-point
    ip ospf area 0.0.0.0
    ip ospf message-digest-key 1 md5 7 nStT+wbPlNmDOUraWn0fVw==
 interface Ethernet3
+   ip ospf neighbor bfd
    ip ospf network point-to-point
    ip ospf area 0.0.0.0
    ip ospf message-digest-key 1 md5 7 nStT+wbPlNmDOUraWn0fVw==
@@ -50,6 +53,7 @@ interface Loopback2
    ip ospf area 0.0.0.0
 router ospf 1
    router-id 10.0.1.0
+   bfd default
    passive-interface default
    no passive-interface Ethernet1
    no passive-interface Ethernet2
@@ -58,14 +62,17 @@ router ospf 1
 
 Spine2#sh run | s r ospf
 interface Ethernet1
+   ip ospf neighbor bfd
    ip ospf network point-to-point
    ip ospf area 0.0.0.0
    ip ospf message-digest-key 1 md5 7 syd9D76nV5B/SVQeMxRyDg==
 interface Ethernet2
+   ip ospf neighbor bfd
    ip ospf network point-to-point
    ip ospf area 0.0.0.0
    ip ospf message-digest-key 1 md5 7 nStT+wbPlNmDOUraWn0fVw==
 interface Ethernet3
+   ip ospf neighbor bfd
    ip ospf network point-to-point
    ip ospf area 0.0.0.0
    ip ospf message-digest-key 1 md5 7 nStT+wbPlNmDOUraWn0fVw==
@@ -75,18 +82,22 @@ interface Loopback2
    ip ospf area 0.0.0.0
 router ospf 1
    router-id 10.0.2.0
+   bfd default
    passive-interface default
    no passive-interface Ethernet1
    no passive-interface Ethernet2
    no passive-interface Ethernet3
    max-lsa 12000
 
+
 Leaf1#sh run | s r ospf
 interface Ethernet1
+   ip ospf neighbor bfd
    ip ospf network point-to-point
    ip ospf area 0.0.0.0
    ip ospf message-digest-key 1 md5 7 syd9D76nV5B/SVQeMxRyDg==
 interface Ethernet2
+   ip ospf neighbor bfd
    ip ospf network point-to-point
    ip ospf area 0.0.0.0
    ip ospf message-digest-key 1 md5 7 nStT+wbPlNmDOUraWn0fVw==
@@ -96,6 +107,7 @@ interface Loopback2
    ip ospf area 0.0.0.0
 router ospf 1
    router-id 10.0.1.1
+   bfd default
    passive-interface default
    no passive-interface Ethernet1
    no passive-interface Ethernet2
@@ -103,10 +115,12 @@ router ospf 1
 
 Leaf2#sh run | s r ospf
 interface Ethernet1
+   ip ospf neighbor bfd
    ip ospf network point-to-point
    ip ospf area 0.0.0.0
    ip ospf message-digest-key 1 md5 7 syd9D76nV5B/SVQeMxRyDg==
 interface Ethernet2
+   ip ospf neighbor bfd
    ip ospf network point-to-point
    ip ospf area 0.0.0.0
    ip ospf message-digest-key 1 md5 7 nStT+wbPlNmDOUraWn0fVw==
@@ -116,17 +130,21 @@ interface Loopback2
    ip ospf area 0.0.0.0
 router ospf 1
    router-id 10.0.1.2
+   bfd default
    passive-interface default
    no passive-interface Ethernet1
    no passive-interface Ethernet2
    max-lsa 12000
 
+
 Leaf3#sh run | s r ospf
 interface Ethernet1
+   ip ospf neighbor bfd
    ip ospf network point-to-point
    ip ospf area 0.0.0.0
    ip ospf message-digest-key 1 md5 7 syd9D76nV5B/SVQeMxRyDg==
 interface Ethernet2
+   ip ospf neighbor bfd
    ip ospf network point-to-point
    ip ospf area 0.0.0.0
    ip ospf message-digest-key 1 md5 7 nStT+wbPlNmDOUraWn0fVw==
@@ -136,6 +154,7 @@ interface Loopback2
    ip ospf area 0.0.0.0
 router ospf 1
    router-id 10.0.1.3
+   bfd default
    passive-interface default
    no passive-interface Ethernet1
    no passive-interface Ethernet2
@@ -148,6 +167,7 @@ router ospf 1
 - На каждом Spine установлены соседсва с Leaf1-3, состояние FULL.
 - В таблице маршрутизации присутствует несколько маршурутов до looback-интерфейсов и маршруты до p2p-линковых подсетей.
 - Со Spine1 доступны все loopback-интерфейсы Spine2 и Leaf1-3.
+- BFD state UP.
 
 ```
 Spine1#sh ip ospf nei
@@ -187,6 +207,21 @@ Codes: C - connected, S - static, K - kernel,
  O        10.2.2.2/31 [110/20] via 10.2.1.3, Ethernet2
  O        10.2.2.4/31 [110/20] via 10.2.1.5, Ethernet3
 
+Spine1#sh bfd peers
+VRF name: default
+-----------------
+DstAddr       MyDisc    YourDisc  Interface/Transport    Type           LastUp
+--------- ----------- ----------- -------------------- ------- ----------------
+10.2.1.1   276107493  3318757653        Ethernet1(13)  normal   08/26/25 18:12
+10.2.1.3   836900986  3064764197        Ethernet2(14)  normal   08/26/25 18:12
+10.2.1.5  3970777779  3246337829        Ethernet3(15)  normal   08/26/25 18:12
+
+   LastDown            LastDiag    State
+-------------- ------------------- -----
+         NA       No Diagnostic       Up
+         NA       No Diagnostic       Up
+         NA       No Diagnostic       Up
+
 Spine2#sh ip ospf ne
 Neighbor ID     Instance VRF      Pri State                  Dead Time   Address         Interface
 10.0.1.1        1        default  0   FULL                   00:00:35    10.2.2.1        Ethernet1
@@ -223,6 +258,21 @@ Codes: C - connected, S - static, K - kernel,
  O        10.2.1.0/31 [110/20] via 10.2.2.1, Ethernet1
  O        10.2.1.2/31 [110/20] via 10.2.2.3, Ethernet2
  O        10.2.1.4/31 [110/20] via 10.2.2.5, Ethernet3
+
+Spine2#sh bfd peers
+VRF name: default
+-----------------
+DstAddr       MyDisc    YourDisc  Interface/Transport    Type           LastUp
+--------- ----------- ----------- -------------------- ------- ----------------
+10.2.2.1   451148968  4206316113        Ethernet1(13)  normal   08/26/25 18:12
+10.2.2.3   156518989  1609037575        Ethernet2(14)  normal   08/26/25 18:12
+10.2.2.5  2720877409  2728979058        Ethernet3(15)  normal   08/26/25 18:12
+
+   LastDown            LastDiag    State
+-------------- ------------------- -----
+         NA       No Diagnostic       Up
+         NA       No Diagnostic       Up
+         NA       No Diagnostic       Up
 
 Leaf1#sh ip ospf nei
 Neighbor ID     Instance VRF      Pri State                  Dead Time   Address         Interface
@@ -261,6 +311,19 @@ Codes: C - connected, S - static, K - kernel,
  O        10.2.2.2/31 [110/20] via 10.2.2.0, Ethernet2
  O        10.2.2.4/31 [110/20] via 10.2.2.0, Ethernet2
 
+Leaf1#sh bfd peers
+VRF name: default
+-----------------
+DstAddr      MyDisc  YourDisc Interface/Transport   Type         LastUp LastDown
+-------- ---------- --------- ------------------- ------ -------------- --------
+10.2.1.0 3287538205 235825279       Ethernet1(13) normal 08/26/25 18:14       NA
+10.2.2.0 4206316113 451148968       Ethernet2(14) normal 08/26/25 18:12       NA
+
+        LastDiag    State
+------------------- -----
+   No Diagnostic       Up
+   No Diagnostic       Up
+
 Leaf2#sh ip ospf nei
 Neighbor ID     Instance VRF      Pri State                  Dead Time   Address         Interface
 10.0.1.0        1        default  0   FULL                   00:00:30    10.2.1.2        Ethernet1
@@ -297,6 +360,19 @@ Codes: C - connected, S - static, K - kernel,
  O        10.2.1.4/31 [110/20] via 10.2.1.2, Ethernet1
  O        10.2.2.0/31 [110/20] via 10.2.2.2, Ethernet2
  O        10.2.2.4/31 [110/20] via 10.2.2.2, Ethernet2
+
+Leaf2#sh bfd peers
+VRF name: default
+-----------------
+DstAddr       MyDisc    YourDisc  Interface/Transport    Type           LastUp
+--------- ----------- ----------- -------------------- ------- ----------------
+10.2.1.2  3000091540  4272622404        Ethernet1(13)  normal   08/26/25 18:14
+10.2.2.2  1609037575   156518989        Ethernet2(14)  normal   08/26/25 18:12
+
+   LastDown            LastDiag    State
+-------------- ------------------- -----
+         NA       No Diagnostic       Up
+         NA       No Diagnostic       Up
 
 Leaf3#sh ip ospf nei
 Neighbor ID     Instance VRF      Pri State                  Dead Time   Address         Interface
@@ -335,6 +411,18 @@ Codes: C - connected, S - static, K - kernel,
  O        10.2.2.0/31 [110/20] via 10.2.2.4, Ethernet2
  O        10.2.2.2/31 [110/20] via 10.2.2.4, Ethernet2
 
+Leaf3#sh bfd peers
+VRF name: default
+-----------------
+DstAddr       MyDisc    YourDisc  Interface/Transport    Type           LastUp
+--------- ----------- ----------- -------------------- ------- ----------------
+10.2.1.4   372922886  3720762229        Ethernet1(13)  normal   08/26/25 18:14
+10.2.2.4  2728979058  2720877409        Ethernet2(14)  normal   08/26/25 18:12
+
+   LastDown            LastDiag    State
+-------------- ------------------- -----
+         NA       No Diagnostic       Up
+         NA       No Diagnostic       Up
 
 Spine1#ping 10.0.2.0
 PING 10.0.2.0 (10.0.2.0) 72(100) bytes of data.
