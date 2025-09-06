@@ -1,4 +1,5 @@
 # Занятие 8. Построение Underlay сети (BGP)
+
 ## **План работы**
 1. Дизайн
   - Схема
@@ -6,6 +7,7 @@
   - Протоколы и общие замечания
 2. Конфигурация
 3. Проверка работоспособности
+
 ## 1. Дизайн
 
 ### Схема
@@ -47,21 +49,101 @@
 
 **Spine1**
 ```
+router bgp 65100
+   router-id 10.0.1.0
+   bgp listen range 10.2.0.0/15 peer-group Leaf_PG peer-filter Leaf
+   neighbor Leaf_PG peer group
+   neighbor Leaf_PG bfd
+   neighbor Leaf_PG timers 3 9
+   neighbor Leaf_PG password 7 n5V7FYyq00M=
+   redistribute connected route-map loopback
 
+peer-filter Leaf
+      10 match as-range 65101-65103 result accept
+
+ip prefix-list loopback
+    seq 10 permit 10.0.1.0/32
+
+route-map loopback permit 10
+   match ip address prefix-list loopback
 ```
 **Spine2**
 ```
+router bgp 65100
+   router-id 10.0.2.0
+   bgp listen range 10.2.0.0/15 peer-group Leaf_PG peer-filter Leaf
+   neighbor Leaf_PG peer group
+   neighbor Leaf_PG bfd
+   neighbor Leaf_PG timers 3 9
+   neighbor Leaf_PG password 7 n5V7FYyq00M=
+   redistribute connected route-map loopback
 
+peer-filter Leaf
+      10 match as-range 65101-65103 result accept
+
+ip prefix-list loopback
+    seq 10 permit 10.0.2.0/32
+
+route-map loopback permit 10
+   match ip address prefix-list loopback
 ```
 **Leaf1**
 ```
+router bgp 65101
+   router-id 10.0.1.1
+   maximum-paths 2 ecmp 2
+   neighbor Spine_PG peer group
+   neighbor Spine_PG remote-as 65100
+   neighbor Spine_PG bfd
+   neighbor Spine_PG timers 3 9
+   neighbor Spine_PG password 7 iV7A4HcTNGo=
+   neighbor 10.2.1.0 peer group Spine_PG
+   neighbor 10.2.2.0 peer group Spine_PG
+   redistribute connected route-map loopback
 
+ip prefix-list loopback
+    seq 10 permit 10.0.1.1/32
+
+route-map loopback permit 10
+   match ip address prefix-list loopback
 ```
 **Leaf2**
 ```
+router bgp 65102
+   router-id 10.0.1.2
+   maximum-paths 2 ecmp 2
+   neighbor Spine_PG peer group
+   neighbor Spine_PG remote-as 65100
+   neighbor Spine_PG bfd
+   neighbor Spine_PG timers 3 9
+   neighbor Spine_PG password 7 iV7A4HcTNGo=
+   neighbor 10.2.1.2 peer group Spine_PG
+   neighbor 10.2.2.2 peer group Spine_PG
+   redistribute connected route-map loopback
 
+ip prefix-list loopback
+   seq 10 permit 10.0.1.2/32
+
+route-map loopback permit 10
+   match ip address prefix-list loopback
 ```
 **Leaf3**
 ```
+router bgp 65103
+   router-id 10.0.1.3
+   maximum-paths 2 ecmp 2
+   neighbor Spine_PG peer group
+   neighbor Spine_PG remote-as 65100
+   neighbor Spine_PG bfd
+   neighbor Spine_PG timers 3 9
+   neighbor Spine_PG password 7 iV7A4HcTNGo=
+   neighbor 10.2.1.4 peer group Spine_PG
+   neighbor 10.2.2.4 peer group Spine_PG
+   redistribute connected route-map loopback
 
+ip prefix-list loopback
+   seq 10 permit 10.0.1.3/32
+
+route-map loopback permit 10
+   match ip address prefix-list loopback
 ```
