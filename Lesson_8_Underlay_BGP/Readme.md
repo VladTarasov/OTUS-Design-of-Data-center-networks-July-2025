@@ -147,3 +147,67 @@ ip prefix-list loopback
 route-map loopback permit 10
    match ip address prefix-list loopback
 ```
+## 3. Проверка работоспособности
+
+Выполняются следующие условия:
+- в таблице маршрутизации представлено по два маршрута до loopback каждого Leaf.
+- В выводе `sh ip bgp` маршруты к loopback каждого Leaf помечены как `Contributing to ECMP`.
+- С Leaf 1 доступны loopback остальных Leaf.
+
+```
+Leaf1#sh ip bgp
+         Network                Next Hop            Metric  LocPref Weight  Path
+ * >     10.0.1.0/32            10.2.1.0              0       100     0       65100 i
+ * >     10.0.1.1/32            -                     0       0       -       i
+ * >Ec   10.0.1.2/32            10.2.1.0              0       100     0       65100 65102 i
+ *  ec   10.0.1.2/32            10.2.2.0              0       100     0       65100 65102 i
+ * >Ec   10.0.1.3/32            10.2.1.0              0       100     0       65100 65103 i
+ *  ec   10.0.1.3/32            10.2.2.0              0       100     0       65100 65103 i
+ * >     10.0.2.0/32            10.2.2.0              0       100     0       65100 i
+
+Leaf1#sh ip route bgp
+ B E      10.0.1.0/32 [200/0] via 10.2.1.0, Ethernet1
+ B E      10.0.1.2/32 [200/0] via 10.2.1.0, Ethernet1
+                              via 10.2.2.0, Ethernet2
+ B E      10.0.1.3/32 [200/0] via 10.2.1.0, Ethernet1
+                              via 10.2.2.0, Ethernet2
+ B E      10.0.2.0/32 [200/0] via 10.2.2.0, Ethernet2
+
+Leaf2#sh ip bgp
+         Network                Next Hop            Metric  LocPref Weight  Path
+ * >     10.0.1.0/32            10.2.1.2              0       100     0       65100 i
+ * >Ec   10.0.1.1/32            10.2.1.2              0       100     0       65100 65101 i
+ *  ec   10.0.1.1/32            10.2.2.2              0       100     0       65100 65101 i
+ * >     10.0.1.2/32            -                     0       0       -       i
+ * >Ec   10.0.1.3/32            10.2.1.2              0       100     0       65100 65103 i
+ *  ec   10.0.1.3/32            10.2.2.2              0       100     0       65100 65103 i
+ * >     10.0.2.0/32            10.2.2.2              0       100     0       65100 i
+
+Leaf2#sh ip route bgp
+ B E      10.0.1.0/32 [200/0] via 10.2.1.2, Ethernet1
+ B E      10.0.1.1/32 [200/0] via 10.2.1.2, Ethernet1
+                              via 10.2.2.2, Ethernet2
+ B E      10.0.1.3/32 [200/0] via 10.2.1.2, Ethernet1
+                              via 10.2.2.2, Ethernet2
+ B E      10.0.2.0/32 [200/0] via 10.2.2.2, Ethernet2
+
+Leaf3#sh ip bgp
+         Network                Next Hop            Metric  LocPref Weight  Path
+ * >     10.0.1.0/32            10.2.1.4              0       100     0       65100 i
+ * >Ec   10.0.1.1/32            10.2.2.4              0       100     0       65100 65101 i
+ *  ec   10.0.1.1/32            10.2.1.4              0       100     0       65100 65101 i
+ * >Ec   10.0.1.2/32            10.2.2.4              0       100     0       65100 65102 i
+ *  ec   10.0.1.2/32            10.2.1.4              0       100     0       65100 65102 i
+ * >     10.0.1.3/32            -                     0       0       -       i
+ * >     10.0.2.0/32            10.2.2.4              0       100     0       65100 i
+
+Leaf3#sh ip route bgp
+ B E      10.0.1.0/32 [200/0] via 10.2.1.4, Ethernet1
+ B E      10.0.1.1/32 [200/0] via 10.2.1.4, Ethernet1
+                              via 10.2.2.4, Ethernet2
+ B E      10.0.1.2/32 [200/0] via 10.2.1.4, Ethernet1
+                              via 10.2.2.4, Ethernet2
+ B E      10.0.2.0/32 [200/0] via 10.2.2.4, Ethernet2
+
+
+```
