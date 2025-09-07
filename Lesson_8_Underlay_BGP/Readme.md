@@ -152,7 +152,7 @@ route-map loopback permit 10
 Выполняются следующие условия:
 - в таблице маршрутизации представлено по два маршрута до loopback каждого Leaf.
 - В выводе `sh ip bgp` маршруты к loopback каждого Leaf помечены как `Contributing to ECMP`.
-- С Leaf 1 доступны loopback остальных Leaf.
+- С Leaf 1 доступны loopback Leaf2 и Leaf3.
 
 ```
 Leaf1#sh ip bgp
@@ -209,5 +209,27 @@ Leaf3#sh ip route bgp
                               via 10.2.2.4, Ethernet2
  B E      10.0.2.0/32 [200/0] via 10.2.2.4, Ethernet2
 
+Leaf1#ping 10.0.1.2 source 10.0.1.1
+PING 10.0.1.2 (10.0.1.2) from 10.0.1.1 : 72(100) bytes of data.
+80 bytes from 10.0.1.2: icmp_seq=1 ttl=63 time=7.60 ms
+80 bytes from 10.0.1.2: icmp_seq=2 ttl=63 time=6.42 ms
+80 bytes from 10.0.1.2: icmp_seq=3 ttl=63 time=5.89 ms
+80 bytes from 10.0.1.2: icmp_seq=4 ttl=63 time=5.85 ms
+80 bytes from 10.0.1.2: icmp_seq=5 ttl=63 time=4.49 ms
 
+--- 10.0.1.2 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 32ms
+rtt min/avg/max/mdev = 4.495/6.052/7.601/1.004 ms, ipg/ewma 8.109/6.759 ms
+
+Leaf1#ping 10.0.1.3 source 10.0.1.1
+PING 10.0.1.3 (10.0.1.3) from 10.0.1.1 : 72(100) bytes of data.
+80 bytes from 10.0.1.3: icmp_seq=1 ttl=63 time=13.7 ms
+80 bytes from 10.0.1.3: icmp_seq=2 ttl=63 time=5.96 ms
+80 bytes from 10.0.1.3: icmp_seq=3 ttl=63 time=6.36 ms
+80 bytes from 10.0.1.3: icmp_seq=4 ttl=63 time=6.00 ms
+80 bytes from 10.0.1.3: icmp_seq=5 ttl=63 time=6.52 ms
+
+--- 10.0.1.3 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 51ms
+rtt min/avg/max/mdev = 5.965/7.714/13.714/3.008 ms, ipg/ewma 12.800/10.620 ms
 ```
