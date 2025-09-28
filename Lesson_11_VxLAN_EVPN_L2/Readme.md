@@ -35,28 +35,159 @@
 - Underlay сеть посроена на eBGP.
 - BFD отключен для экономии ресурсов стенда.
 - Для распространения BUM используем Ingress Replication.
+- Модель EVPN сервиса VLAN-based.
+- Организуем сервис L2VPN для узлов в VLAN10 VNI 10010.
 
 ## 2. Конфигурация
 
-Ниже приведены конфигурации узлов в части касающейся настроек VxLAN и EVPN.
+Ниже приведены конфигурации узлов (в части касающейся настроек VxLAN и EVPN для краткости).
 
 **Spine1**
 ```
+!
+service routing protocols model multi-agent
+!
+router bgp 65100
+   router-id 10.0.1.0
+   maximum-paths 2 ecmp 2
+   bgp listen range 10.2.0.0/15 peer-group Leaf_PG peer-filter Leaf
+   neighbor Leaf_PG peer group
+   neighbor Leaf_PG timers 3 9
+   neighbor Leaf_PG password 7 n5V7FYyq00M=
+   neighbor Leaf_PG send-community extended
+   redistribute connected route-map loopback
+   !
+   address-family evpn
+      neighbor Leaf_PG activate
 ```
 **Spine2**
 ```
+!
+service routing protocols model multi-agent
+!
+router bgp 65100
+   router-id 10.0.2.0
+   maximum-paths 2 ecmp 2
+   bgp listen range 10.2.0.0/15 peer-group Leaf_PG peer-filter Leaf
+   neighbor Leaf_PG peer group
+   neighbor Leaf_PG timers 3 9
+   neighbor Leaf_PG password 7 n5V7FYyq00M=
+   neighbor Leaf_PG send-community extended
+   redistribute connected route-map loopback
+   !
+   address-family evpn
+      neighbor Leaf_PG activate
 ```
 **Leaf1**
 ```
+!
+vlan 10
+   name LAN_10
+!
+interface Ethernet3
+   description =Host1_Eth0=
+   switchport access vlan 10
+!
+interface Vxlan1
+   vxlan source-interface Loopback1
+   vxlan udp-port 4789
+   vxlan vlan 10 vni 10010
+!
+router bgp 65101
+   router-id 10.0.1.1
+   maximum-paths 2 ecmp 2
+   neighbor Spine_PG peer group
+   neighbor Spine_PG remote-as 65100
+   neighbor Spine_PG timers 3 9
+   neighbor Spine_PG password 7 iV7A4HcTNGo=
+   neighbor Spine_PG send-community extended
+   neighbor 10.2.1.0 peer group Spine_PG
+   neighbor 10.2.2.0 peer group Spine_PG
+   redistribute connected route-map loopback
+   !
+   vlan 10
+      rd auto
+      route-target import 65102:10010
+      route-target import 65103:10010
+      route-target export 65101:10010
+      redistribute learned
+   !
+   address-family evpn
+      neighbor Spine_PG activate
 ```
 **Leaf2**
 ```
+!
+vlan 10
+   name LAN_10
+!
+interface Vxlan1
+   vxlan source-interface Loopback1
+   vxlan udp-port 4789
+   vxlan vlan 10 vni 10010
+router bgp 65102
+   router-id 10.0.1.2
+   maximum-paths 2 ecmp 2
+   neighbor Spine_PG peer group
+   neighbor Spine_PG remote-as 65100
+   neighbor Spine_PG timers 3 9
+   neighbor Spine_PG password 7 iV7A4HcTNGo=
+   neighbor Spine_PG send-community extended
+   neighbor 10.2.1.2 peer group Spine_PG
+   neighbor 10.2.2.2 peer group Spine_PG
+   redistribute connected route-map loopback
+   !
+   vlan 10
+      rd auto
+      route-target import 65101:10010
+      route-target import 65103:10010
+      route-target export 65102:10010
+      redistribute learned
+   !
+   address-family evpn
+      neighbor Spine_PG activate
 ```
 **Leaf3**
 ```
+!
+vlan 10
+   name LAN_10
+!
+interface Ethernet3
+   description =Host3_Eth0=
+   switchport access vlan 10
+!
+interface Vxlan1
+   vxlan source-interface Loopback1
+   vxlan udp-port 4789
+   vxlan vlan 10 vni 10010
+!
+router bgp 65103
+   router-id 10.0.1.3
+   maximum-paths 2 ecmp 2
+   neighbor Spine_PG peer group
+   neighbor Spine_PG remote-as 65100
+   neighbor Spine_PG timers 3 9
+   neighbor Spine_PG password 7 iV7A4HcTNGo=
+   neighbor Spine_PG send-community extended
+   neighbor 10.2.1.4 peer group Spine_PG
+   neighbor 10.2.2.4 peer group Spine_PG
+   redistribute connected route-map loopback
+   !
+   vlan 10
+      rd auto
+      route-target import 65101:10010
+      route-target import 65102:10010
+      route-target export 65103:10010
+      redistribute learned
+   !
+   address-family evpn
+      neighbor Spine_PG activate
 ```
-
-
+## 3. Проверка работоспособности
+Выполняются следующие условия:
+- Между узлами установлены соседства в address-family evpn.
+- На каждеом Leaf присутствуют по два route type 3 маршрута до остальных Leaf.
 ```
 Spine1#sh bgp evpn sum
 BGP summary information for VRF default
@@ -100,23 +231,7 @@ Neighbor Status Codes: m - Under maintenance
   10.2.1.4 4 65100            381       380    0    0 00:02:09 Estab   2      2
   10.2.2.4 4 65100            371       370    0    0 00:15:26 Estab   2      2
 
-Leaf3#sh bgp evpn
-BGP routing table information for VRF default
-Router identifier 10.0.1.3, local AS number 65103
-Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
-                    c - Contributing to ECMP, % - Pending BGP convergence
-Origin codes: i - IGP, e - EGP, ? - incomplete
-AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
 
-          Network                Next Hop              Metric  LocPref Weight  Path
- * >Ec    RD: 10.0.1.1:10 imet 10.0.1.1
-                                 10.0.1.1              -       100     0       65100 65101 i
- *  ec    RD: 10.0.1.1:10 imet 10.0.1.1
-                                 10.0.1.1              -       100     0       65100 65101 i
- * >Ec    RD: 10.0.1.2:10 imet 10.0.1.2
-                                 10.0.1.2              -       100     0       65100 65102 i
- *  ec    RD: 10.0.1.2:10 imet 10.0.1.2
-                                 10.0.1.2              -       100     0       65100 65102 i
 
 
 ```
