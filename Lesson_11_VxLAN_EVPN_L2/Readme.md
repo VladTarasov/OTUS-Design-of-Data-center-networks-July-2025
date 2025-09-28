@@ -39,6 +39,12 @@
 - Организуем сервис L2VPN для узлов в VLAN10 VNI 10010.
 
 ## 2. Конфигурация
+Необходимо сконфигурировать:
+- send-community extended на каждом узле;
+- соседство в address-family evpn между Leaf и Spine;
+- VLAN 10 и access порт на каждом Leaf в сторону хоста;
+- MAC-vrf VLAN 10: rd, rt import/export, редистрибьюцию изученных MAC в BGP;
+- interface Vxlan, где настроить сопоставление VLAN 10 с VNI 10010. 
 
 Ниже приведены конфигурации узлов (в части касающейся настроек VxLAN и EVPN для краткости).
 
@@ -187,51 +193,260 @@ router bgp 65103
 ## 3. Проверка работоспособности
 Выполняются следующие условия:
 - Между узлами установлены соседства в address-family evpn.
-- На каждеом Leaf присутствуют по два route type 3 маршрута до остальных Leaf.
+- На каждом Leaf присутствуют по два route type 3 маршрута до остальных Leaf с учетом ECMP.
+- С каждого хоста доступны два других хоста.
+- После проверки доступности хостов на Leaf появляется по два маршрута route type 2 с учетом ECMP.
 ```
 Spine1#sh bgp evpn sum
 BGP summary information for VRF default
 Router identifier 10.0.1.0, local AS number 65100
 Neighbor Status Codes: m - Under maintenance
   Neighbor V AS           MsgRcvd   MsgSent  InQ OutQ  Up/Down State   PfxRcd PfxAcc
-  10.2.1.1 4 65101            619       620    0    0 00:26:12 Estab   1      1
-  10.2.1.3 4 65102            622       621    0    0 00:26:10 Estab   1      1
-  10.2.1.5 4 65103            306       304    0    0 00:12:36 Estab   0      0
+  10.2.1.1 4 65101            276       273    0    0 00:11:21 Estab   1      1
+  10.2.1.3 4 65102           2598      2591    0    0 01:50:21 Estab   1      1
+  10.2.1.5 4 65103            276       273    0    0 00:11:21 Estab   1      1
 
 Spine2#sh bgp evpn sum
 BGP summary information for VRF default
 Router identifier 10.0.2.0, local AS number 65100
 Neighbor Status Codes: m - Under maintenance
   Neighbor V AS           MsgRcvd   MsgSent  InQ OutQ  Up/Down State   PfxRcd PfxAcc
-  10.2.2.1 4 65101            643       634    0    0 00:26:48 Estab   1      1
-  10.2.2.3 4 65102            641       636    0    0 00:26:45 Estab   1      1
-  10.2.2.5 4 65103            628       630    0    0 00:26:28 Estab   0      0
+  10.2.2.1 4 65101            285       286    0    0 00:11:46 Estab   1      1
+  10.2.2.3 4 65102            289       285    0    0 00:11:45 Estab   1      1
+  10.2.2.5 4 65103            288       284    0    0 00:11:46 Estab   1      1
 
 Leaf1#sh bgp evpn sum
 BGP summary information for VRF default
 Router identifier 10.0.1.1, local AS number 65101
 Neighbor Status Codes: m - Under maintenance
   Neighbor V AS           MsgRcvd   MsgSent  InQ OutQ  Up/Down State   PfxRcd PfxAcc
-  10.2.1.0 4 65100            428       429    0    0 00:18:03 Estab   1      1
-  10.2.2.0 4 65100            431       437    0    0 00:18:04 Estab   1      1
+  10.2.1.0 4 65100           6414      6414    0    0 00:11:51 Estab   2      2
+  10.2.2.0 4 65100           6404      6414    0    0 00:11:51 Estab   2      2
 
 Leaf2#sh bgp evpn sum
 BGP summary information for VRF default
 Router identifier 10.0.1.2, local AS number 65102
 Neighbor Status Codes: m - Under maintenance
   Neighbor V AS           MsgRcvd   MsgSent  InQ OutQ  Up/Down State   PfxRcd PfxAcc
-  10.2.1.2 4 65100            599       599    0    0 00:25:12 Estab   1      1
-  10.2.2.2 4 65100            598       604    0    0 00:25:12 Estab   1      1
+  10.2.1.2 4 65100           6356      6354    0    0 01:50:55 Estab   2      2
+  10.2.2.2 4 65100           6347      6355    0    0 00:11:54 Estab   2      2
 
 Leaf3#sh bgp evpn sum
 BGP summary information for VRF default
 Router identifier 10.0.1.3, local AS number 65103
 Neighbor Status Codes: m - Under maintenance
   Neighbor V AS           MsgRcvd   MsgSent  InQ OutQ  Up/Down State   PfxRcd PfxAcc
-  10.2.1.4 4 65100            381       380    0    0 00:02:09 Estab   2      2
-  10.2.2.4 4 65100            371       370    0    0 00:15:26 Estab   2      2
+  10.2.1.4 4 65100           6306      6310    0    0 00:11:58 Estab   2      2
+  10.2.2.4 4 65100           6309      6311    0    0 00:11:58 Estab   2      2
 
+Leaf1#sh bgp evpn route-type imet
+BGP routing table information for VRF default
+Router identifier 10.0.1.1, local AS number 65101
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
 
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >      RD: 10.0.1.1:10 imet 10.0.1.1
+                                 -                     -       -       0       i
+ * >Ec    RD: 10.0.1.2:10 imet 10.0.1.2
+                                 10.0.1.2              -       100     0       65100 65102 i
+ *  ec    RD: 10.0.1.2:10 imet 10.0.1.2
+                                 10.0.1.2              -       100     0       65100 65102 i
+ * >Ec    RD: 10.0.1.3:10 imet 10.0.1.3
+                                 10.0.1.3              -       100     0       65100 65103 i
+ *  ec    RD: 10.0.1.3:10 imet 10.0.1.3
+                                 10.0.1.3              -       100     0       65100 65103 i
 
+Leaf2#sh bgp evpn sum
+BGP summary information for VRF default
+Router identifier 10.0.1.2, local AS number 65102
+Neighbor Status Codes: m - Under maintenance
+  Neighbor V AS           MsgRcvd   MsgSent  InQ OutQ  Up/Down State   PfxRcd PfxAcc
+  10.2.1.2 4 65100           6356      6354    0    0 01:50:55 Estab   2      2
+  10.2.2.2 4 65100           6347      6355    0    0 00:11:54 Estab   2      2
+Leaf2#sh bgp evpn route-type imet
+BGP routing table information for VRF default
+Router identifier 10.0.1.2, local AS number 65102
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
 
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >Ec    RD: 10.0.1.1:10 imet 10.0.1.1
+                                 10.0.1.1              -       100     0       65100 65101 i
+ *  ec    RD: 10.0.1.1:10 imet 10.0.1.1
+                                 10.0.1.1              -       100     0       65100 65101 i
+ * >      RD: 10.0.1.2:10 imet 10.0.1.2
+                                 -                     -       -       0       i
+ * >Ec    RD: 10.0.1.3:10 imet 10.0.1.3
+                                 10.0.1.3              -       100     0       65100 65103 i
+ *  ec    RD: 10.0.1.3:10 imet 10.0.1.3
+                                 10.0.1.3              -       100     0       65100 65103 i
+
+Leaf3#sh bgp evpn sum
+BGP summary information for VRF default
+Router identifier 10.0.1.3, local AS number 65103
+Neighbor Status Codes: m - Under maintenance
+  Neighbor V AS           MsgRcvd   MsgSent  InQ OutQ  Up/Down State   PfxRcd PfxAcc
+  10.2.1.4 4 65100           6306      6310    0    0 00:11:58 Estab   2      2
+  10.2.2.4 4 65100           6309      6311    0    0 00:11:58 Estab   2      2
+Leaf3#sh bgp evpn route-type imet
+BGP routing table information for VRF default
+Router identifier 10.0.1.3, local AS number 65103
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >Ec    RD: 10.0.1.1:10 imet 10.0.1.1
+                                 10.0.1.1              -       100     0       65100 65101 i
+ *  ec    RD: 10.0.1.1:10 imet 10.0.1.1
+                                 10.0.1.1              -       100     0       65100 65101 i
+ * >Ec    RD: 10.0.1.2:10 imet 10.0.1.2
+                                 10.0.1.2              -       100     0       65100 65102 i
+ *  ec    RD: 10.0.1.2:10 imet 10.0.1.2
+                                 10.0.1.2              -       100     0       65100 65102 i
+ * >      RD: 10.0.1.3:10 imet 10.0.1.3
+                                 -                     -       -       0       i
+Host1> sh ip
+
+NAME        : Host1[1]
+IP/MASK     : 192.168.10.1/24
+GATEWAY     : 255.255.255.0
+DNS         :
+MAC         : 00:50:79:66:68:09
+LPORT       : 20000
+RHOST:PORT  : 127.0.0.1:30000
+MTU         : 1500
+
+Host1> ping 192.168.10.2
+
+84 bytes from 192.168.10.2 icmp_seq=1 ttl=64 time=18.722 ms
+84 bytes from 192.168.10.2 icmp_seq=2 ttl=64 time=58.870 ms
+84 bytes from 192.168.10.2 icmp_seq=3 ttl=64 time=31.448 ms
+84 bytes from 192.168.10.2 icmp_seq=4 ttl=64 time=43.022 ms
+84 bytes from 192.168.10.2 icmp_seq=5 ttl=64 time=43.975 ms
+^C
+Host1> ping 192.168.10.3
+
+84 bytes from 192.168.10.3 icmp_seq=1 ttl=64 time=17.017 ms
+84 bytes from 192.168.10.3 icmp_seq=2 ttl=64 time=62.420 ms
+84 bytes from 192.168.10.3 icmp_seq=3 ttl=64 time=43.796 ms
+84 bytes from 192.168.10.3 icmp_seq=4 ttl=64 time=44.480 ms
+^C
+Host2> sh ip
+
+NAME        : Host2[1]
+IP/MASK     : 192.168.10.2/24
+GATEWAY     : 192.168.10.254
+DNS         :
+MAC         : 00:50:79:66:68:07
+LPORT       : 20000
+RHOST:PORT  : 127.0.0.1:30000
+MTU         : 1500
+
+Host2> ping 192.168.10.1
+
+84 bytes from 192.168.10.1 icmp_seq=1 ttl=64 time=33.634 ms
+84 bytes from 192.168.10.1 icmp_seq=2 ttl=64 time=27.847 ms
+84 bytes from 192.168.10.1 icmp_seq=3 ttl=64 time=54.868 ms
+84 bytes from 192.168.10.1 icmp_seq=4 ttl=64 time=39.599 ms
+^C
+Host2> ping 192.168.10.3
+
+84 bytes from 192.168.10.3 icmp_seq=1 ttl=64 time=11.714 ms
+84 bytes from 192.168.10.3 icmp_seq=2 ttl=64 time=36.933 ms
+84 bytes from 192.168.10.3 icmp_seq=3 ttl=64 time=55.969 ms
+84 bytes from 192.168.10.3 icmp_seq=4 ttl=64 time=37.146 ms
+^C
+
+Host3> sh ip
+
+NAME        : Host3[1]
+IP/MASK     : 192.168.10.3/24
+GATEWAY     : 192.168.10.254
+DNS         :
+MAC         : 00:50:79:66:68:08
+LPORT       : 20000
+RHOST:PORT  : 127.0.0.1:30000
+MTU         : 1500
+
+Host3> ping 192.168.10.2
+
+84 bytes from 192.168.10.2 icmp_seq=1 ttl=64 time=35.846 ms
+84 bytes from 192.168.10.2 icmp_seq=2 ttl=64 time=30.707 ms
+84 bytes from 192.168.10.2 icmp_seq=3 ttl=64 time=47.589 ms
+84 bytes from 192.168.10.2 icmp_seq=4 ttl=64 time=65.995 ms
+^C
+Host3> ping 192.168.10.1
+
+84 bytes from 192.168.10.1 icmp_seq=1 ttl=64 time=41.625 ms
+84 bytes from 192.168.10.1 icmp_seq=2 ttl=64 time=46.073 ms
+84 bytes from 192.168.10.1 icmp_seq=3 ttl=64 time=53.189 ms
+84 bytes from 192.168.10.1 icmp_seq=4 ttl=64 time=50.324 ms
+^C
+
+Leaf1#sh bgp evpn route-type mac-ip
+BGP routing table information for VRF default
+Router identifier 10.0.1.1, local AS number 65101
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >Ec    RD: 10.0.1.2:10 mac-ip 0050.7966.6807
+                                 10.0.1.2              -       100     0       65100 65102 i
+ *  ec    RD: 10.0.1.2:10 mac-ip 0050.7966.6807
+                                 10.0.1.2              -       100     0       65100 65102 i
+ * >Ec    RD: 10.0.1.3:10 mac-ip 0050.7966.6808
+                                 10.0.1.3              -       100     0       65100 65103 i
+ *  ec    RD: 10.0.1.3:10 mac-ip 0050.7966.6808
+                                 10.0.1.3              -       100     0       65100 65103 i
+ * >      RD: 10.0.1.1:10 mac-ip 0050.7966.6809
+                                 -                     -       -       0       i
+
+Leaf2#sh bgp evpn route-type mac-ip
+BGP routing table information for VRF default
+Router identifier 10.0.1.2, local AS number 65102
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >      RD: 10.0.1.2:10 mac-ip 0050.7966.6807
+                                 -                     -       -       0       i
+ * >Ec    RD: 10.0.1.3:10 mac-ip 0050.7966.6808
+                                 10.0.1.3              -       100     0       65100 65103 i
+ *  ec    RD: 10.0.1.3:10 mac-ip 0050.7966.6808
+                                 10.0.1.3              -       100     0       65100 65103 i
+ * >Ec    RD: 10.0.1.1:10 mac-ip 0050.7966.6809
+                                 10.0.1.1              -       100     0       65100 65101 i
+ *  ec    RD: 10.0.1.1:10 mac-ip 0050.7966.6809
+                                 10.0.1.1              -       100     0       65100 65101 i
+
+Leaf3#sh bgp evpn route-type imet
+BGP routing table information for VRF default
+Router identifier 10.0.1.3, local AS number 65103
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >Ec    RD: 10.0.1.1:10 imet 10.0.1.1
+                                 10.0.1.1              -       100     0       65100 65101 i
+ *  ec    RD: 10.0.1.1:10 imet 10.0.1.1
+                                 10.0.1.1              -       100     0       65100 65101 i
+ * >Ec    RD: 10.0.1.2:10 imet 10.0.1.2
+                                 10.0.1.2              -       100     0       65100 65102 i
+ *  ec    RD: 10.0.1.2:10 imet 10.0.1.2
+                                 10.0.1.2              -       100     0       65100 65102 i
+ * >      RD: 10.0.1.3:10 imet 10.0.1.3
+                                 -                     -       -       0       i
 ```
