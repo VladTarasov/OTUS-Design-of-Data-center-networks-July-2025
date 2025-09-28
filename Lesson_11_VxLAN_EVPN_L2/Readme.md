@@ -43,8 +43,8 @@
 - send-community extended на каждом узле;
 - соседство в address-family evpn между Leaf и Spine;
 - VLAN 10 и access порт на каждом Leaf в сторону хоста;
-- MAC-vrf VLAN 10: rd, rt import/export, редистрибьюцию изученных MAC в BGP;
-- interface Vxlan, где настроить сопоставление VLAN 10 с VNI 10010. 
+- MAC-vrf VLAN 10: rd auto, rt import/export настроены вручную, включена редистрибьюция изученных MAC в BGP;
+- interface Vxlan1, где настроить сопоставление VLAN 10 с VNI 10010. 
 
 Ниже приведены конфигурации узлов (в части касающейся настроек VxLAN и EVPN для краткости).
 
@@ -259,13 +259,6 @@ AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Li
  *  ec    RD: 10.0.1.3:10 imet 10.0.1.3
                                  10.0.1.3              -       100     0       65100 65103 i
 
-Leaf2#sh bgp evpn sum
-BGP summary information for VRF default
-Router identifier 10.0.1.2, local AS number 65102
-Neighbor Status Codes: m - Under maintenance
-  Neighbor V AS           MsgRcvd   MsgSent  InQ OutQ  Up/Down State   PfxRcd PfxAcc
-  10.2.1.2 4 65100           6356      6354    0    0 01:50:55 Estab   2      2
-  10.2.2.2 4 65100           6347      6355    0    0 00:11:54 Estab   2      2
 Leaf2#sh bgp evpn route-type imet
 BGP routing table information for VRF default
 Router identifier 10.0.1.2, local AS number 65102
@@ -286,13 +279,6 @@ AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Li
  *  ec    RD: 10.0.1.3:10 imet 10.0.1.3
                                  10.0.1.3              -       100     0       65100 65103 i
 
-Leaf3#sh bgp evpn sum
-BGP summary information for VRF default
-Router identifier 10.0.1.3, local AS number 65103
-Neighbor Status Codes: m - Under maintenance
-  Neighbor V AS           MsgRcvd   MsgSent  InQ OutQ  Up/Down State   PfxRcd PfxAcc
-  10.2.1.4 4 65100           6306      6310    0    0 00:11:58 Estab   2      2
-  10.2.2.4 4 65100           6309      6311    0    0 00:11:58 Estab   2      2
 Leaf3#sh bgp evpn route-type imet
 BGP routing table information for VRF default
 Router identifier 10.0.1.3, local AS number 65103
