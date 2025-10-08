@@ -89,7 +89,6 @@ interface Vlan10
    vrf S_IRB-100
    ip address virtual 192.168.10.254/24
 !
-ip routing
 ip routing vrf S_IRB-100
 ```
 **Leaf2**
@@ -247,7 +246,6 @@ Host1> ping 192.168.20.1
 84 bytes from 192.168.20.1 icmp_seq=2 ttl=62 time=55.615 ms
 84 bytes from 192.168.20.1 icmp_seq=3 ttl=62 time=39.404 ms
 ^C
-
 Host2> sh ip
 
 NAME        : Host2[1]
@@ -324,4 +322,157 @@ Host3> ping 192.168.20.1
 84 bytes from 192.168.20.1 icmp_seq=3 ttl=62 time=15.492 ms
 84 bytes from 192.168.20.1 icmp_seq=4 ttl=62 time=40.614 ms
 ^C
+```
+*sh bgp evpn*
+
+```
+Leaf1#sh bgp evpn
+BGP routing table information for VRF default
+Router identifier 10.0.1.1, local AS number 65101
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >Ec    RD: 10.0.1.2:10 mac-ip 0050.7966.6806
+                                 10.0.1.2              -       100     0       65100 65102 i
+ *  ec    RD: 10.0.1.2:10 mac-ip 0050.7966.6806
+                                 10.0.1.2              -       100     0       65100 65102 i
+ * >Ec    RD: 10.0.1.2:10 mac-ip 0050.7966.6806 192.168.10.2
+                                 10.0.1.2              -       100     0       65100 65102 i
+ *  ec    RD: 10.0.1.2:10 mac-ip 0050.7966.6806 192.168.10.2
+                                 10.0.1.2              -       100     0       65100 65102 i
+ * >Ec    RD: 10.0.1.3:10 mac-ip 0050.7966.6807
+                                 10.0.1.3              -       100     0       65100 65103 i
+ *  ec    RD: 10.0.1.3:10 mac-ip 0050.7966.6807
+                                 10.0.1.3              -       100     0       65100 65103 i
+ * >Ec    RD: 10.0.1.3:10 mac-ip 0050.7966.6807 192.168.10.3
+                                 10.0.1.3              -       100     0       65100 65103 i
+ *  ec    RD: 10.0.1.3:10 mac-ip 0050.7966.6807 192.168.10.3
+                                 10.0.1.3              -       100     0       65100 65103 i
+ * >      RD: 10.0.1.1:10 mac-ip 0050.7966.6808
+                                 -                     -       -       0       i
+ * >      RD: 10.0.1.1:10 mac-ip 0050.7966.6808 192.168.10.1
+                                 -                     -       -       0       i
+ * >Ec    RD: 10.0.1.2:20 mac-ip 0050.7966.6809
+                                 10.0.1.2              -       100     0       65100 65102 i
+ *  ec    RD: 10.0.1.2:20 mac-ip 0050.7966.6809
+                                 10.0.1.2              -       100     0       65100 65102 i
+ * >Ec    RD: 10.0.1.2:20 mac-ip 0050.7966.6809 192.168.20.1
+                                 10.0.1.2              -       100     0       65100 65102 i
+ *  ec    RD: 10.0.1.2:20 mac-ip 0050.7966.6809 192.168.20.1
+                                 10.0.1.2              -       100     0       65100 65102 i
+ * >      RD: 10.0.1.1:10 imet 10.0.1.1
+                                 -                     -       -       0       i
+ * >Ec    RD: 10.0.1.2:10 imet 10.0.1.2
+                                 10.0.1.2              -       100     0       65100 65102 i
+ *  ec    RD: 10.0.1.2:10 imet 10.0.1.2
+                                 10.0.1.2              -       100     0       65100 65102 i
+ * >Ec    RD: 10.0.1.2:20 imet 10.0.1.2
+                                 10.0.1.2              -       100     0       65100 65102 i
+ *  ec    RD: 10.0.1.2:20 imet 10.0.1.2
+                                 10.0.1.2              -       100     0       65100 65102 i
+ * >Ec    RD: 10.0.1.3:10 imet 10.0.1.3
+                                 10.0.1.3              -       100     0       65100 65103 i
+ *  ec    RD: 10.0.1.3:10 imet 10.0.1.3
+                                 10.0.1.3              -       100     0       65100 65103 i
+
+Leaf2#sh bgp evpn
+BGP routing table information for VRF default
+Router identifier 10.0.1.2, local AS number 65102
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >      RD: 10.0.1.2:10 mac-ip 0050.7966.6806
+                                 -                     -       -       0       i
+ * >      RD: 10.0.1.2:10 mac-ip 0050.7966.6806 192.168.10.2
+                                 -                     -       -       0       i
+ * >Ec    RD: 10.0.1.3:10 mac-ip 0050.7966.6807
+                                 10.0.1.3              -       100     0       65100 65103 i
+ *  ec    RD: 10.0.1.3:10 mac-ip 0050.7966.6807
+                                 10.0.1.3              -       100     0       65100 65103 i
+ * >Ec    RD: 10.0.1.3:10 mac-ip 0050.7966.6807 192.168.10.3
+                                 10.0.1.3              -       100     0       65100 65103 i
+ *  ec    RD: 10.0.1.3:10 mac-ip 0050.7966.6807 192.168.10.3
+                                 10.0.1.3              -       100     0       65100 65103 i
+ * >Ec    RD: 10.0.1.1:10 mac-ip 0050.7966.6808
+                                 10.0.1.1              -       100     0       65100 65101 i
+ *  ec    RD: 10.0.1.1:10 mac-ip 0050.7966.6808
+                                 10.0.1.1              -       100     0       65100 65101 i
+ * >Ec    RD: 10.0.1.1:10 mac-ip 0050.7966.6808 192.168.10.1
+                                 10.0.1.1              -       100     0       65100 65101 i
+ *  ec    RD: 10.0.1.1:10 mac-ip 0050.7966.6808 192.168.10.1
+                                 10.0.1.1              -       100     0       65100 65101 i
+ * >      RD: 10.0.1.2:20 mac-ip 0050.7966.6809
+                                 -                     -       -       0       i
+ * >      RD: 10.0.1.2:20 mac-ip 0050.7966.6809 192.168.20.1
+                                 -                     -       -       0       i
+ * >Ec    RD: 10.0.1.1:10 imet 10.0.1.1
+                                 10.0.1.1              -       100     0       65100 65101 i
+ *  ec    RD: 10.0.1.1:10 imet 10.0.1.1
+                                 10.0.1.1              -       100     0       65100 65101 i
+ * >      RD: 10.0.1.2:10 imet 10.0.1.2
+                                 -                     -       -       0       i
+ * >      RD: 10.0.1.2:20 imet 10.0.1.2
+                                 -                     -       -       0       i
+ * >Ec    RD: 10.0.1.3:10 imet 10.0.1.3
+                                 10.0.1.3              -       100     0       65100 65103 i
+ *  ec    RD: 10.0.1.3:10 imet 10.0.1.3
+                                 10.0.1.3              -       100     0       65100 65103 i
+
+Leaf3#sh bgp evpn
+BGP routing table information for VRF default
+Router identifier 10.0.1.3, local AS number 65103
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >Ec    RD: 10.0.1.2:10 mac-ip 0050.7966.6806
+                                 10.0.1.2              -       100     0       65100 65102 i
+ *  ec    RD: 10.0.1.2:10 mac-ip 0050.7966.6806
+                                 10.0.1.2              -       100     0       65100 65102 i
+ * >Ec    RD: 10.0.1.2:10 mac-ip 0050.7966.6806 192.168.10.2
+                                 10.0.1.2              -       100     0       65100 65102 i
+ *  ec    RD: 10.0.1.2:10 mac-ip 0050.7966.6806 192.168.10.2
+                                 10.0.1.2              -       100     0       65100 65102 i
+ * >      RD: 10.0.1.3:10 mac-ip 0050.7966.6807
+                                 -                     -       -       0       i
+ * >      RD: 10.0.1.3:10 mac-ip 0050.7966.6807 192.168.10.3
+                                 -                     -       -       0       i
+ * >Ec    RD: 10.0.1.1:10 mac-ip 0050.7966.6808
+                                 10.0.1.1              -       100     0       65100 65101 i
+ *  ec    RD: 10.0.1.1:10 mac-ip 0050.7966.6808
+                                 10.0.1.1              -       100     0       65100 65101 i
+ * >Ec    RD: 10.0.1.1:10 mac-ip 0050.7966.6808 192.168.10.1
+                                 10.0.1.1              -       100     0       65100 65101 i
+ *  ec    RD: 10.0.1.1:10 mac-ip 0050.7966.6808 192.168.10.1
+                                 10.0.1.1              -       100     0       65100 65101 i
+ * >Ec    RD: 10.0.1.2:20 mac-ip 0050.7966.6809
+                                 10.0.1.2              -       100     0       65100 65102 i
+ *  ec    RD: 10.0.1.2:20 mac-ip 0050.7966.6809
+                                 10.0.1.2              -       100     0       65100 65102 i
+ * >Ec    RD: 10.0.1.2:20 mac-ip 0050.7966.6809 192.168.20.1
+                                 10.0.1.2              -       100     0       65100 65102 i
+ *  ec    RD: 10.0.1.2:20 mac-ip 0050.7966.6809 192.168.20.1
+                                 10.0.1.2              -       100     0       65100 65102 i
+ * >Ec    RD: 10.0.1.1:10 imet 10.0.1.1
+                                 10.0.1.1              -       100     0       65100 65101 i
+ *  ec    RD: 10.0.1.1:10 imet 10.0.1.1
+                                 10.0.1.1              -       100     0       65100 65101 i
+ * >Ec    RD: 10.0.1.2:10 imet 10.0.1.2
+                                 10.0.1.2              -       100     0       65100 65102 i
+ *  ec    RD: 10.0.1.2:10 imet 10.0.1.2
+                                 10.0.1.2              -       100     0       65100 65102 i
+ * >Ec    RD: 10.0.1.2:20 imet 10.0.1.2
+                                 10.0.1.2              -       100     0       65100 65102 i
+ *  ec    RD: 10.0.1.2:20 imet 10.0.1.2
+                                 10.0.1.2              -       100     0       65100 65102 i
+ * >      RD: 10.0.1.3:10 imet 10.0.1.3
+                                 -                     -       -       0       i
 ```
