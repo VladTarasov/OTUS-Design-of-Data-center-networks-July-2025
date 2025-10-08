@@ -36,14 +36,14 @@
 - Модель EVPN L3 сервиса Edge-routed Briging Symetric IRB. Модели Briged Overlay и Edge-routed Briging Asymetric IRB не рассматриваются.
 
 ## 2. Конфигурация
-В дополенение к конфигурации EVPN L2 Необходимо:
-На каждом Leaf
+В дополенение к конфигурации EVPN L2 Необходимо:\
+На каждом Leaf\
 - создать VRF;
 - включить ip routing для мозданного VRF;
 - добавить в bgp процесс конфигурацию VRF, указать RD и политики import/export;
 - в interface Vxlan1 настроить сопоставление VRF с VNI 100;
-- создать SVI Vlan10, Vlan20, добавить из в VRF, указать IP как anycast gateway. 
-На Leaf2
+- создать SVI Vlan10, Vlan20, добавить из в VRF, указать IP как anycast gateway.\ 
+На Leaf2\
 - создать VLAN 20 и настроить access порт в сторону Host_20.1;
 - добавить в bgp процесс конфигурацию MAC-vrf VLAN 20: rd auto, rt import/export настроены вручную, включена редистрибьюция изученных MAC в BGP;
 
