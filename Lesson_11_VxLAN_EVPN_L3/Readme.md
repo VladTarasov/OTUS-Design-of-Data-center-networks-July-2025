@@ -36,7 +36,7 @@
 - Модель EVPN L3 сервиса Edge-routed Briging Symetric IRB. Модели Briged Overlay и Edge-routed Briging Asymetric IRB не рассматриваются.
 
 ## 2. Конфигурация
-В дополенение к конфигурации EVPN L2 Необходимо:
+В дополенение к конфигурации EVPN L2 Необходимо:\
 На каждом Leaf
 - создать VRF;
 - включить ip routing для мозданного VRF;
