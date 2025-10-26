@@ -56,5 +56,6 @@
 
 <img width="3109" height="2106" alt="image" src="https://github.com/user-attachments/assets/5054c8d7-1e68-4425-8c2f-72d305bccb51" />
 
+**Адресный план**
 
 
