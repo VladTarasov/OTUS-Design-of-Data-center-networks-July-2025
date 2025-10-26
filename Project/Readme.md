@@ -41,8 +41,20 @@
 
 **Схема сети**
 0-й этап Tier3
+
 <img width="1674" height="2385" alt="image" src="https://github.com/user-attachments/assets/98c0bd63-10d7-4391-95e8-8aaf3bd13788" />
+
 1-й этап SingleFabric
-<img width="2728" height="1837" alt="image" src="https://github.com/user-attachments/assets/1695db41-91fc-40f2-aad8-b71cd6dc5b75" />
+
+<img width="2817" height="1986" alt="image" src="https://github.com/user-attachments/assets/fede1edc-a445-4df9-bafb-25e9cd216e23" />
+
+2-й этап MultiFabric
+
+<img width="2199" height="1518" alt="image" src="https://github.com/user-attachments/assets/d3ed4546-5c99-4ef0-87e4-aa26380c58a8" />
+
+3-й этап MultiPod
+
+<img width="3109" height="2106" alt="image" src="https://github.com/user-attachments/assets/5054c8d7-1e68-4425-8c2f-72d305bccb51" />
+
 
 
