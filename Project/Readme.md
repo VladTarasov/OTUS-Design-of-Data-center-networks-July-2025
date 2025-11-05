@@ -130,3 +130,108 @@ mtu = 9000 - на ip-линках внутри фибрики.
 - Связность между VRF Services разных ЦОД отсутствует (трассировка).
 - Доступ в Интернет в каждом ЦОД из всех VRF осущетсвляется только через межсетевой экран (трассировка).
 
+```
+COD2-WWW#sh ip route
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       a - application route
+       + - replicated route, % - next hop override, p - overrides from PfR
+
+Gateway of last resort is 10.2.20.254 to network 0.0.0.0
+
+S*    0.0.0.0/0 [1/0] via 10.2.20.254
+      10.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        10.2.20.0/24 is directly connected, Vlan20
+L        10.2.20.1/32 is directly connected, Vlan20
+COD2-WWW#ping 10.2.20.254
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 10.2.20.254, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 20/65/237 ms
+COD2-WWW#ping 10.2.10.1
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 10.2.10.1, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 40/46/56 ms
+COD2-WWW#ping 8.8.8.8
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 8.8.8.8, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 46/47/49 ms
+COD2-WWW#trac
+COD2-WWW#traceroute 10.2.10.1
+Type escape sequence to abort.
+Tracing the route to 10.2.10.1
+VRF info: (vrf in name/id, vrf out name/id)
+  1 10.2.20.254 34 msec 20 msec 18 msec
+  2 172.17.250.6 67 msec 30 msec 39 msec
+  3 10.2.10.254 54 msec 37 msec 33 msec
+  4 10.2.10.1 46 msec *  218 msec
+COD2-WWW#traceroute 8.8.8.8
+Type escape sequence to abort.
+Tracing the route to 8.8.8.8
+VRF info: (vrf in name/id, vrf out name/id)
+  1 10.2.20.254 30 msec 18 msec 18 msec
+  2 172.17.250.0 27 msec 26 msec 24 msec
+  3 192.168.175.2 31 msec 28 msec 27 msec
+  4  *  *
+
+COD2-DC#sh ip route
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       a - application route
+       + - replicated route, % - next hop override, p - overrides from PfR
+
+Gateway of last resort is 10.2.10.254 to network 0.0.0.0
+
+S*    0.0.0.0/0 [1/0] via 10.2.10.254
+      10.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        10.2.10.0/24 is directly connected, Vlan10
+L        10.2.10.1/32 is directly connected, Vlan10
+COD2-DC#ping 10.2.10.254
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 10.2.10.254, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 5/30/107 ms
+COD2-DC#ping 10.2.20.1
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 10.2.20.1, timeout is 2 seconds:
+.!!!!
+Success rate is 80 percent (4/5), round-trip min/avg/max = 38/67/102 ms
+COD2-DC#ping 8.8.8.8
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 8.8.8.8, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 44/67/137 ms
+COD2-DC#trace
+COD2-DC#traceroute 10.2.20.1
+Type escape sequence to abort.
+Tracing the route to 10.2.20.1
+VRF info: (vrf in name/id, vrf out name/id)
+  1 10.2.10.254 14 msec 5 msec 7 msec
+  2 172.17.250.2 25 msec 18 msec 19 msec
+  3 172.17.250.7 53 msec 30 msec 25 msec
+  4 10.2.20.1 45 msec *  46 msec
+COD2-DC#traceroute 8.8.8.8
+Type escape sequence to abort.
+Tracing the route to 8.8.8.8
+VRF info: (vrf in name/id, vrf out name/id)
+  1 10.2.10.254 34 msec 11 msec 10 msec
+  2 172.17.250.2 29 msec 18 msec 17 msec
+  3 172.17.250.7 35 msec 58 msec 44 msec
+  4 172.17.250.0 50 msec 42 msec 39 msec
+  5 192.168.175.2 49 msec 43 msec 43 msec
+  6  *
+
+
+```
