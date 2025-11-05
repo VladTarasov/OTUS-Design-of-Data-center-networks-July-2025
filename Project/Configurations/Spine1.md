@@ -1,0 +1,79 @@
+```
+! device: Spine1 (vEOS-lab, EOS-4.29.2F)
+!
+! boot system flash:/vEOS-lab.swi
+!
+no aaa root
+!
+transceiver qsfp default-mode 4x10G
+!
+service routing protocols model multi-agent
+!
+hostname Spine1
+!
+spanning-tree mode mstp
+!
+interface Ethernet1
+   description =Leaf1_Eth1=
+   mtu 9000
+   no switchport
+   ip address 172.17.201.0/31
+!
+interface Ethernet2
+   description =Leaf2_Eth1=
+   mtu 9000
+   no switchport
+   ip address 172.17.201.2/31
+!
+interface Ethernet3
+   description =Leaf3_Eth1=
+   mtu 9000
+   no switchport
+   ip address 172.17.201.4/31
+!
+interface Ethernet4
+   description =Leaf4_Eth1=
+   mtu 9000
+   no switchport
+   ip address 172.17.201.6/31
+!
+interface Ethernet5
+!
+interface Ethernet6
+!
+interface Ethernet7
+!
+interface Ethernet8
+!
+interface Loopback0
+   description Underlay
+   ip address 172.17.1.0/32
+!
+interface Management1
+!
+ip routing
+!
+ip prefix-list Underlay
+   seq 10 permit 172.17.1.0/32
+!
+route-map Underlay permit 10
+   match ip address prefix-list Underlay
+!
+peer-filter Underlay
+   10 match as-range 65201-65299 result accept
+!
+router bgp 65200
+   router-id 172.17.1.0
+   maximum-paths 16 ecmp 16
+   bgp listen range 172.17.201.0/24 peer-group Underlay peer-filter Underlay
+   neighbor Underlay peer group
+   neighbor Underlay timers 3 9
+   neighbor Underlay password 7 pMz/0TkQX3Iq4ekhMDMo7Q==
+   neighbor Underlay send-community extended
+   redistribute connected route-map Underlay
+   !
+   address-family evpn
+      neighbor Underlay activate
+!
+end
+```
