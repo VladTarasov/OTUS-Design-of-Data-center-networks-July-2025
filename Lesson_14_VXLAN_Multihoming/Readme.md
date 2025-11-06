@@ -818,5 +818,232 @@ AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Li
                                  172.17.103.0          -       100     0       65200 65203 i
  * >      RD: 172.17.104.0:10 imet 172.17.104.0
                                  -                     -       -       0       i
+```
+Симмитируем ситуацию выхода из строя Leaf3 путем выключения линков 7 и 8.
 
+Только лишь отключения линков на стороне Leaf3-4 оказалось недостаточно, поэтому пришлось также выключить соответствующие порты на стороне серверов.
+В противном случае сервера продолжали отправлять трафик в упавшие линки. При этом не мопогало даже удаление линков между устройствами.
+
+После устранения особенностей, связанных с виртуализацией, наблюдаем восстановление связности между хостами COD2-DC и COD2-www.
+
+<img width="1349" height="664" alt="image" src="https://github.com/user-attachments/assets/a809a06a-06ab-4baa-91d1-fce81dbd2a89" />
+
+<img width="4771" height="2175" alt="image" src="https://github.com/user-attachments/assets/c2afc86a-7278-43e9-9482-4a9ec15408fd" />
+
+<img width="1855" height="1166" alt="image" src="https://github.com/user-attachments/assets/41098118-22b4-422a-bc5b-6ff3a6e99ed1" />
+
+```
+Leaf3(config)#int po 1
+Leaf3(config-if-Po1)#shut
+Leaf3(config-if-Po1)#exit
+Leaf3(config)#int port-Channel 2
+Leaf3(config-if-Po2)#shut
+Leaf3(config-if-Po2)#end
+Leaf3#sh int desc
+Interface                      Status         Protocol           Description
+Et1                            up             up                 =Spine1_Eth3=
+Et2                            up             up                 =Spine2_Eth3=
+Et3                            up             up
+Et4                            up             up
+Et5                            up             up
+Et6                            up             up
+Et7                            admin down     down               =WWW_Gi0/0=
+Et8                            admin down     down               =COD2-DC_Gi0/0=
+Lo0                            up             up                 Underlay
+Ma1                            down           down
+Po1                            admin down     down               =WWW=
+Po2                            admin down     down               =COD2-DC=
+Vl10                           up             up                 =WWW_Anycast_GW=
+Vl4094                         up             up
+Vx1                            up             up
+Leaf3#
+
+COD2-DC#sh int desc
+*Nov  6 15:02:02.962: %SYS-5-CONFIG_I: Configured from consoleping 10.2.20.1 repeat 1000000
+Type escape sequence to abort.
+Sending 1000000, 100-byte ICMP Echos to 10.2.20.1, timeout is 2 seconds:
+......................................................................
+...............................................
+Success rate is 0 percent (0/117)
+COD2-DC#ping 8.8.8.8
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 8.8.8.8, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 52/75/110 ms
+
+COD2-WWW#ping 10.2.10.1
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 10.2.10.1, timeout is 2 seconds:
+.....
+Success rate is 0 percent (0/5)
+COD2-WWW#ping 8.8.8.8
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 8.8.8.8, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 44/81/140 ms
+
+Leaf1#sh bgp evpn vni 10010
+BGP routing table information for VRF default
+Router identifier 172.17.101.0, local AS number 65201
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >Ec    RD: 172.17.104.0:10 auto-discovery 0 0000:0000:0000:0000:3402
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:10 auto-discovery 0 0000:0000:0000:0000:3402
+                                 172.17.104.0          -       100     0       65200 65204 i
+ * >Ec    RD: 172.17.104.0:10 mac-ip 5036.7300.800a
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:10 mac-ip 5036.7300.800a
+                                 172.17.104.0          -       100     0       65200 65204 i
+ * >Ec    RD: 172.17.104.0:10 mac-ip 5036.7300.800a 10.2.10.1
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:10 mac-ip 5036.7300.800a 10.2.10.1
+                                 172.17.104.0          -       100     0       65200 65204 i
+ * >Ec    RD: 172.17.103.0:10 imet 172.17.103.0
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:10 imet 172.17.103.0
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >Ec    RD: 172.17.104.0:10 imet 172.17.104.0
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:10 imet 172.17.104.0
+                                 172.17.104.0          -       100     0       65200 65204 i
+
+Leaf2#sh bgp evpn vni 10010
+BGP routing table information for VRF default
+Router identifier 172.17.102.0, local AS number 65202
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >Ec    RD: 172.17.104.0:10 auto-discovery 0 0000:0000:0000:0000:3402
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:10 auto-discovery 0 0000:0000:0000:0000:3402
+                                 172.17.104.0          -       100     0       65200 65204 i
+ * >Ec    RD: 172.17.104.0:10 mac-ip 5036.7300.800a
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:10 mac-ip 5036.7300.800a
+                                 172.17.104.0          -       100     0       65200 65204 i
+ * >Ec    RD: 172.17.104.0:10 mac-ip 5036.7300.800a 10.2.10.1
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:10 mac-ip 5036.7300.800a 10.2.10.1
+                                 172.17.104.0          -       100     0       65200 65204 i
+ * >Ec    RD: 172.17.103.0:10 imet 172.17.103.0
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:10 imet 172.17.103.0
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >Ec    RD: 172.17.104.0:10 imet 172.17.104.0
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:10 imet 172.17.104.0
+                                 172.17.104.0          -       100     0       65200 65204 i
+
+
+Leaf3#sh bgp evpn vni 10010
+BGP routing table information for VRF default
+Router identifier 172.17.103.0, local AS number 65203
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >Ec    RD: 172.17.104.0:10 auto-discovery 0 0000:0000:0000:0000:3402
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:10 auto-discovery 0 0000:0000:0000:0000:3402
+                                 172.17.104.0          -       100     0       65200 65204 i
+ * >Ec    RD: 172.17.104.0:10 mac-ip 5036.7300.800a
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:10 mac-ip 5036.7300.800a
+                                 172.17.104.0          -       100     0       65200 65204 i
+ * >Ec    RD: 172.17.104.0:10 mac-ip 5036.7300.800a 10.2.10.1
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:10 mac-ip 5036.7300.800a 10.2.10.1
+                                 172.17.104.0          -       100     0       65200 65204 i
+ * >      RD: 172.17.103.0:10 imet 172.17.103.0
+                                 -                     -       -       0       i
+ * >Ec    RD: 172.17.104.0:10 imet 172.17.104.0
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:10 imet 172.17.104.0
+                                 172.17.104.0          -       100     0       65200 65204 i
+Leaf3#sh mac address-table vlan 10
+          Mac Address Table
+------------------------------------------------------------------
+
+Vlan    Mac Address       Type        Ports      Moves   Last Move
+----    -----------       ----        -----      -----   ---------
+  10    5036.7300.800a    DYNAMIC     Vx1        1       0:08:31 ago
+Total Mac Addresses for this criterion: 1
+
+          Multicast Mac Address Table
+------------------------------------------------------------------
+
+Vlan    Mac Address       Type        Ports
+----    -----------       ----        -----
+Total Mac Addresses for this criterion: 0
+
+
+Leaf4#sh bgp evpn vni 10010
+BGP routing table information for VRF default
+Router identifier 172.17.104.0, local AS number 65204
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >      RD: 172.17.104.0:10 auto-discovery 0 0000:0000:0000:0000:3402
+                                 -                     -       -       0       i
+ * >      RD: 172.17.104.0:10 mac-ip 5036.7300.800a
+                                 -                     -       -       0       i
+ * >      RD: 172.17.104.0:10 mac-ip 5036.7300.800a 10.2.10.1
+                                 -                     -       -       0       i
+ * >Ec    RD: 172.17.103.0:10 imet 172.17.103.0
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:10 imet 172.17.103.0
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >      RD: 172.17.104.0:10 imet 172.17.104.0
+                                 -                     -       -       0       i
+Leaf4#sh mac address-table vlan 10
+          Mac Address Table
+------------------------------------------------------------------
+
+Vlan    Mac Address       Type        Ports      Moves   Last Move
+----    -----------       ----        -----      -----   ---------
+  10    5036.7300.800a    DYNAMIC     Po2        1       0:06:15 ago
+Total Mac Addresses for this criterion: 1
+
+          Multicast Mac Address Table
+------------------------------------------------------------------
+
+Vlan    Mac Address       Type        Ports
+----    -----------       ----        -----
+Total Mac Addresses for this criterion: 0
+
+COD2-WWW(config)#int gi
+COD2-WWW(config)#int gigabitEthernet 0/0
+COD2-WWW(config-if)#shut
+COD2-WWW(config-if)#
+*Nov  6 15:04:11.479: %LINK-5-CHANGED: Interface GigabitEthernet0/0, changed state to administratively down
+COD2-WWW(config-if)#
+COD2-WWW(config-if)#
+
+COD2-DC#ping 10.2.20.1 repeat 1000000
+Type escape sequence to abort.
+Sending 1000000, 100-byte ICMP Echos to 10.2.20.1, timeout is 2 seconds:
+...................................................!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!.
+Success rate is 90 percent (517/569), round-trip min/avg/max = 32/53/414 ms
+```
 
