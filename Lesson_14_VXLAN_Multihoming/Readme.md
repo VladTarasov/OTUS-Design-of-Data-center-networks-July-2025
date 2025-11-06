@@ -15,7 +15,7 @@
 
 ### Схема
 <img width="1883" height="1381" alt="image" src="https://github.com/user-attachments/assets/935e6833-8bde-427d-be8d-99af6b1909e3" />
-### Адресное пространство
+### Адресное пространство\
 Распределение адресов для loopback интерфейсов /32:
 
 | Loopback         | Spine1     | Spine2     | Leaf1        |Leaf2         |Leaf3         |Leaf4        |
