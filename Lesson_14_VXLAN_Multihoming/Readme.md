@@ -81,7 +81,7 @@ Leaf3-4 (DF - Leaf3 preference 200)\
      lacp system-id 0000.0000.3401
   Po2\
      identifier 0000:0000:0000:0000:3402\
-     lacp system-id 0000.0000.3402\
+     lacp system-id 0000.0000.3402
 
 ### Протоколы и общие замечания
 - Underlay сеть посроена на eBGP.
