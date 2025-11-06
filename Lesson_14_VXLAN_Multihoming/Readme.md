@@ -195,7 +195,18 @@ interface Port-Channel2
 
 ## 3. Проверка работоспособности
 Отключить по 1 downlink на DF Leaf1,3 в сторону хостов, убедиться, что связность восстановилась с минимальными потерями или не нарушилась вовсе.
-Состояние до начала проверки
+Состояние до начала проверки.
+
+Данные с сервера COD2-DC, что видим:
+- порты в сторону Leaf3-4 UP;
+- Port-channel 1 UP, оба линка bundled, active;
+- SVI Vl10 UP;
+- проходит ping до COD2-WWW.
+В дампах на стороне COD2-DC видим, что весь трафик проходит через Leaf3.
+В дампах на стороне COD2-WWW видим, что reqest проходят через leaf4, а reply через Leaf3.
+
+<img width="3771" height="2113" alt="image" src="https://github.com/user-attachments/assets/fb61ecc8-c83d-4e53-a338-43fe3795e798" />
+
 ```
 COD2-DC#sh int desc
 Interface                      Status         Protocol Description
@@ -341,7 +352,9 @@ Time since last port Un-bundled: 0d:01h:20m:10s    Gi0/0
 - порты в сторону Leaf3-4 UP;
 - Port-channel 1 UP, оба линка bundled, active;
 - SVI Vl20 UP;
-- проходит ping до COD2-DC. В дампах на стороне COD2-WWW видим, что request балансируются между leaf3-4, а вот replay приходят строго через Leaf3.
+- проходит ping до COD2-DC.
+В дампах на стороне COD2-WWW видим, что request проходит через leaf3, а replay через Leaf4.
+В дампах на стороне COD2-DC видим,  что весь трафик проходит через Leaf3.
 ```
 COD2-WWW#sh int desc
 Interface                      Status         Protocol Description
@@ -482,4 +495,328 @@ Index   Load   Port     EC state        No of bits
 Time since last port bundled:    0d:01h:19m:29s    Gi0/0
 Time since last port Un-bundled: 0d:01h:25m:15s    Gi0/0
 ```
-<img width="2161" height="2086" alt="image" src="https://github.com/user-attachments/assets/0cbe2ced-42cd-456e-84d2-1f4138e1d92e" />
+<img width="3787" height="2148" alt="image" src="https://github.com/user-attachments/assets/b688f83d-4af5-4dc3-9b8a-356c87ce35d0" />
+
+Состояние таблиц маршрутизации EVPN
+
+```
+Leaf1#sh bgp evpn vni 20020
+BGP routing table information for VRF default
+Router identifier 172.17.101.0, local AS number 65201
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >      RD: 172.17.101.0:20 auto-discovery 0 0000:0000:0000:0000:1201
+                                 -                     -       -       0       i
+ * >Ec    RD: 172.17.102.0:20 auto-discovery 0 0000:0000:0000:0000:1201
+                                 172.17.102.0          -       100     0       65200 65202 i
+ *  ec    RD: 172.17.102.0:20 auto-discovery 0 0000:0000:0000:0000:1201
+                                 172.17.102.0          -       100     0       65200 65202 i
+ * >Ec    RD: 172.17.103.0:20 auto-discovery 0 0000:0000:0000:0000:3401
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:20 auto-discovery 0 0000:0000:0000:0000:3401
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >Ec    RD: 172.17.104.0:20 auto-discovery 0 0000:0000:0000:0000:3401
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:20 auto-discovery 0 0000:0000:0000:0000:3401
+                                 172.17.104.0          -       100     0       65200 65204 i
+ * >Ec    RD: 172.17.102.0:20 mac-ip 001e.e5dc.47c0
+                                 172.17.102.0          -       100     0       65200 65202 i
+ *  ec    RD: 172.17.102.0:20 mac-ip 001e.e5dc.47c0
+                                 172.17.102.0          -       100     0       65200 65202 i
+ * >Ec    RD: 172.17.103.0:20 mac-ip 5017.8a00.8014
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:20 mac-ip 5017.8a00.8014
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >      RD: 172.17.101.0:20 imet 172.17.101.0
+                                 -                     -       -       0       i
+ * >Ec    RD: 172.17.102.0:20 imet 172.17.102.0
+                                 172.17.102.0          -       100     0       65200 65202 i
+ *  ec    RD: 172.17.102.0:20 imet 172.17.102.0
+                                 172.17.102.0          -       100     0       65200 65202 i
+ * >Ec    RD: 172.17.103.0:20 imet 172.17.103.0
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:20 imet 172.17.103.0
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >Ec    RD: 172.17.104.0:20 imet 172.17.104.0
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:20 imet 172.17.104.0
+                                 172.17.104.0          -       100     0       65200 65204 i
+
+Leaf2#sh bgp evpn vni 20020
+BGP routing table information for VRF default
+Router identifier 172.17.102.0, local AS number 65202
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >Ec    RD: 172.17.101.0:20 auto-discovery 0 0000:0000:0000:0000:1201
+                                 172.17.101.0          -       100     0       65200 65201 i
+ *  ec    RD: 172.17.101.0:20 auto-discovery 0 0000:0000:0000:0000:1201
+                                 172.17.101.0          -       100     0       65200 65201 i
+ * >      RD: 172.17.102.0:20 auto-discovery 0 0000:0000:0000:0000:1201
+                                 -                     -       -       0       i
+ * >Ec    RD: 172.17.103.0:20 auto-discovery 0 0000:0000:0000:0000:3401
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:20 auto-discovery 0 0000:0000:0000:0000:3401
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >Ec    RD: 172.17.104.0:20 auto-discovery 0 0000:0000:0000:0000:3401
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:20 auto-discovery 0 0000:0000:0000:0000:3401
+                                 172.17.104.0          -       100     0       65200 65204 i
+ * >      RD: 172.17.102.0:20 mac-ip 001e.e5dc.47c0
+                                 -                     -       -       0       i
+ * >Ec    RD: 172.17.103.0:20 mac-ip 5017.8a00.8014
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:20 mac-ip 5017.8a00.8014
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >Ec    RD: 172.17.101.0:20 imet 172.17.101.0
+                                 172.17.101.0          -       100     0       65200 65201 i
+ *  ec    RD: 172.17.101.0:20 imet 172.17.101.0
+                                 172.17.101.0          -       100     0       65200 65201 i
+ * >      RD: 172.17.102.0:20 imet 172.17.102.0
+                                 -                     -       -       0       i
+ * >Ec    RD: 172.17.103.0:20 imet 172.17.103.0
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:20 imet 172.17.103.0
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >Ec    RD: 172.17.104.0:20 imet 172.17.104.0
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:20 imet 172.17.104.0
+                                 172.17.104.0          -       100     0       65200 65204 i
+
+Leaf3#sh bgp evpn vni 20020
+BGP routing table information for VRF default
+Router identifier 172.17.103.0, local AS number 65203
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >Ec    RD: 172.17.101.0:20 auto-discovery 0 0000:0000:0000:0000:1201
+                                 172.17.101.0          -       100     0       65200 65201 i
+ *  ec    RD: 172.17.101.0:20 auto-discovery 0 0000:0000:0000:0000:1201
+                                 172.17.101.0          -       100     0       65200 65201 i
+ * >Ec    RD: 172.17.102.0:20 auto-discovery 0 0000:0000:0000:0000:1201
+                                 172.17.102.0          -       100     0       65200 65202 i
+ *  ec    RD: 172.17.102.0:20 auto-discovery 0 0000:0000:0000:0000:1201
+                                 172.17.102.0          -       100     0       65200 65202 i
+ * >      RD: 172.17.103.0:20 auto-discovery 0 0000:0000:0000:0000:3401
+                                 -                     -       -       0       i
+ * >Ec    RD: 172.17.104.0:20 auto-discovery 0 0000:0000:0000:0000:3401
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:20 auto-discovery 0 0000:0000:0000:0000:3401
+                                 172.17.104.0          -       100     0       65200 65204 i
+ * >Ec    RD: 172.17.102.0:20 mac-ip 001e.e5dc.47c0
+                                 172.17.102.0          -       100     0       65200 65202 i
+ *  ec    RD: 172.17.102.0:20 mac-ip 001e.e5dc.47c0
+                                 172.17.102.0          -       100     0       65200 65202 i
+ * >      RD: 172.17.103.0:20 mac-ip 5017.8a00.8014
+                                 -                     -       -       0       i
+ * >Ec    RD: 172.17.101.0:20 imet 172.17.101.0
+                                 172.17.101.0          -       100     0       65200 65201 i
+ *  ec    RD: 172.17.101.0:20 imet 172.17.101.0
+                                 172.17.101.0          -       100     0       65200 65201 i
+ * >Ec    RD: 172.17.102.0:20 imet 172.17.102.0
+                                 172.17.102.0          -       100     0       65200 65202 i
+ *  ec    RD: 172.17.102.0:20 imet 172.17.102.0
+                                 172.17.102.0          -       100     0       65200 65202 i
+ * >      RD: 172.17.103.0:20 imet 172.17.103.0
+                                 -                     -       -       0       i
+ * >Ec    RD: 172.17.104.0:20 imet 172.17.104.0
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:20 imet 172.17.104.0
+                                 172.17.104.0          -       100     0       65200 65204 i
+
+Leaf4#sh bgp evpn vni 20020
+BGP routing table information for VRF default
+Router identifier 172.17.104.0, local AS number 65204
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >Ec    RD: 172.17.101.0:20 auto-discovery 0 0000:0000:0000:0000:1201
+                                 172.17.101.0          -       100     0       65200 65201 i
+ *  ec    RD: 172.17.101.0:20 auto-discovery 0 0000:0000:0000:0000:1201
+                                 172.17.101.0          -       100     0       65200 65201 i
+ * >Ec    RD: 172.17.102.0:20 auto-discovery 0 0000:0000:0000:0000:1201
+                                 172.17.102.0          -       100     0       65200 65202 i
+ *  ec    RD: 172.17.102.0:20 auto-discovery 0 0000:0000:0000:0000:1201
+                                 172.17.102.0          -       100     0       65200 65202 i
+ * >Ec    RD: 172.17.103.0:20 auto-discovery 0 0000:0000:0000:0000:3401
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:20 auto-discovery 0 0000:0000:0000:0000:3401
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >      RD: 172.17.104.0:20 auto-discovery 0 0000:0000:0000:0000:3401
+                                 -                     -       -       0       i
+ * >Ec    RD: 172.17.102.0:20 mac-ip 001e.e5dc.47c0
+                                 172.17.102.0          -       100     0       65200 65202 i
+ *  ec    RD: 172.17.102.0:20 mac-ip 001e.e5dc.47c0
+                                 172.17.102.0          -       100     0       65200 65202 i
+ * >Ec    RD: 172.17.103.0:20 mac-ip 5017.8a00.8014
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:20 mac-ip 5017.8a00.8014
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >Ec    RD: 172.17.101.0:20 imet 172.17.101.0
+                                 172.17.101.0          -       100     0       65200 65201 i
+ *  ec    RD: 172.17.101.0:20 imet 172.17.101.0
+                                 172.17.101.0          -       100     0       65200 65201 i
+ * >Ec    RD: 172.17.102.0:20 imet 172.17.102.0
+                                 172.17.102.0          -       100     0       65200 65202 i
+ *  ec    RD: 172.17.102.0:20 imet 172.17.102.0
+                                 172.17.102.0          -       100     0       65200 65202 i
+ * >Ec    RD: 172.17.103.0:20 imet 172.17.103.0
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:20 imet 172.17.103.0
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >      RD: 172.17.104.0:20 imet 172.17.104.0
+                                 -                     -       -       0       i
+
+
+Leaf1#sh bgp evpn vni 10010
+BGP routing table information for VRF default
+Router identifier 172.17.101.0, local AS number 65201
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >Ec    RD: 172.17.103.0:10 auto-discovery 0 0000:0000:0000:0000:3402
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:10 auto-discovery 0 0000:0000:0000:0000:3402
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >Ec    RD: 172.17.104.0:10 auto-discovery 0 0000:0000:0000:0000:3402
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:10 auto-discovery 0 0000:0000:0000:0000:3402
+                                 172.17.104.0          -       100     0       65200 65204 i
+ * >Ec    RD: 172.17.103.0:10 mac-ip 5036.7300.800a
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:10 mac-ip 5036.7300.800a
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >Ec    RD: 172.17.103.0:10 mac-ip 5036.7300.800a 10.2.10.1
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:10 mac-ip 5036.7300.800a 10.2.10.1
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >Ec    RD: 172.17.104.0:10 mac-ip 5036.7300.800a 10.2.10.1
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:10 mac-ip 5036.7300.800a 10.2.10.1
+                                 172.17.104.0          -       100     0       65200 65204 i
+ * >Ec    RD: 172.17.103.0:10 imet 172.17.103.0
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:10 imet 172.17.103.0
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >Ec    RD: 172.17.104.0:10 imet 172.17.104.0
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:10 imet 172.17.104.0
+                                 172.17.104.0          -       100     0       65200 65204 i
+
+Leaf2#sh bgp evpn vni 10010
+BGP routing table information for VRF default
+Router identifier 172.17.102.0, local AS number 65202
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >Ec    RD: 172.17.103.0:10 auto-discovery 0 0000:0000:0000:0000:3402
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:10 auto-discovery 0 0000:0000:0000:0000:3402
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >Ec    RD: 172.17.104.0:10 auto-discovery 0 0000:0000:0000:0000:3402
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:10 auto-discovery 0 0000:0000:0000:0000:3402
+                                 172.17.104.0          -       100     0       65200 65204 i
+ * >Ec    RD: 172.17.103.0:10 mac-ip 5036.7300.800a
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:10 mac-ip 5036.7300.800a
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >Ec    RD: 172.17.103.0:10 mac-ip 5036.7300.800a 10.2.10.1
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:10 mac-ip 5036.7300.800a 10.2.10.1
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >Ec    RD: 172.17.104.0:10 mac-ip 5036.7300.800a 10.2.10.1
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:10 mac-ip 5036.7300.800a 10.2.10.1
+                                 172.17.104.0          -       100     0       65200 65204 i
+ * >Ec    RD: 172.17.103.0:10 imet 172.17.103.0
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:10 imet 172.17.103.0
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >Ec    RD: 172.17.104.0:10 imet 172.17.104.0
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:10 imet 172.17.104.0
+                                 172.17.104.0          -       100     0       65200 65204 i
+
+Leaf3#sh bgp evpn vni 10010
+BGP routing table information for VRF default
+Router identifier 172.17.103.0, local AS number 65203
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >      RD: 172.17.103.0:10 auto-discovery 0 0000:0000:0000:0000:3402
+                                 -                     -       -       0       i
+ * >Ec    RD: 172.17.104.0:10 auto-discovery 0 0000:0000:0000:0000:3402
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:10 auto-discovery 0 0000:0000:0000:0000:3402
+                                 172.17.104.0          -       100     0       65200 65204 i
+ * >      RD: 172.17.103.0:10 mac-ip 5036.7300.800a
+                                 -                     -       -       0       i
+ * >      RD: 172.17.103.0:10 mac-ip 5036.7300.800a 10.2.10.1
+                                 -                     -       -       0       i
+ * >Ec    RD: 172.17.104.0:10 mac-ip 5036.7300.800a 10.2.10.1
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:10 mac-ip 5036.7300.800a 10.2.10.1
+                                 172.17.104.0          -       100     0       65200 65204 i
+ * >      RD: 172.17.103.0:10 imet 172.17.103.0
+                                 -                     -       -       0       i
+ * >Ec    RD: 172.17.104.0:10 imet 172.17.104.0
+                                 172.17.104.0          -       100     0       65200 65204 i
+ *  ec    RD: 172.17.104.0:10 imet 172.17.104.0
+                                 172.17.104.0          -       100     0       65200 65204 i
+
+Leaf4#sh bgp evpn vni 10010
+BGP routing table information for VRF default
+Router identifier 172.17.104.0, local AS number 65204
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >Ec    RD: 172.17.103.0:10 auto-discovery 0 0000:0000:0000:0000:3402
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:10 auto-discovery 0 0000:0000:0000:0000:3402
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >      RD: 172.17.104.0:10 auto-discovery 0 0000:0000:0000:0000:3402
+                                 -                     -       -       0       i
+ * >Ec    RD: 172.17.103.0:10 mac-ip 5036.7300.800a
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:10 mac-ip 5036.7300.800a
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >Ec    RD: 172.17.103.0:10 mac-ip 5036.7300.800a 10.2.10.1
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:10 mac-ip 5036.7300.800a 10.2.10.1
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >      RD: 172.17.104.0:10 mac-ip 5036.7300.800a 10.2.10.1
+                                 -                     -       -       0       i
+ * >Ec    RD: 172.17.103.0:10 imet 172.17.103.0
+                                 172.17.103.0          -       100     0       65200 65203 i
+ *  ec    RD: 172.17.103.0:10 imet 172.17.103.0
+                                 172.17.103.0          -       100     0       65200 65203 i
+ * >      RD: 172.17.104.0:10 imet 172.17.104.0
+                                 -                     -       -       0       i
+
+
