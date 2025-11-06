@@ -69,7 +69,7 @@ vxlan vrf Infrastructure vni 777
 
 Распределение Port-channel, DF, ESI identifier, lacp system-id\
 Leaf1-2 (DF - Leaf1 preference 200)\
-  Po1\ 
+  Po1\
     identifier 0000:0000:0000:0000:1201\
     lacp system-id 0000.0000.1201\
   Po2\
