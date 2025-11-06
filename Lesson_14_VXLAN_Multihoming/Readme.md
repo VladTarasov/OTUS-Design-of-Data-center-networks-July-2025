@@ -195,7 +195,291 @@ interface Port-Channel2
 
 ## 3. Проверка работоспособности
 Отключить по 1 downlink на DF Leaf1,3 в сторону хостов, убедиться, что связность восстановилась с минимальными потерями или не нарушилась вовсе.
-
+Состояние до начала проверки
 ```
+COD2-DC#sh int desc
+Interface                      Status         Protocol Description
+Gi0/0                          up             up       =Leaf3_Eth8=
+Gi0/1                          up             up       =Leaf4_Eth8=
+Gi0/2                          down           down
+Gi0/3                          down           down
+Gi1/0                          down           down
+Gi1/1                          down           down
+Gi1/2                          down           down
+Gi1/3                          down           down
+Po1                            up             up       =MH_Leaf3-4_Po2=
+Vl10                           up             up       =DC=
 
+COD2-DC#sh ip int bri
+Interface              IP-Address      OK? Method Status                Protocol
+GigabitEthernet0/0     unassigned      YES unset  up                    up
+GigabitEthernet0/1     unassigned      YES unset  up                    up
+GigabitEthernet0/2     unassigned      YES unset  down                  down
+GigabitEthernet0/3     unassigned      YES unset  down                  down
+GigabitEthernet1/0     unassigned      YES unset  down                  down
+GigabitEthernet1/1     unassigned      YES unset  down                  down
+GigabitEthernet1/2     unassigned      YES unset  down                  down
+GigabitEthernet1/3     unassigned      YES unset  down                  down
+Port-channel1          unassigned      YES unset  up                    up
+Vlan10                 10.2.10.1       YES NVRAM  up                    up
+
+COD2-DC#sh int vlan 10
+Vlan10 is up, line protocol is up
+  Hardware is Ethernet SVI, address is 5036.7300.800a (bia 5036.7300.800a)
+  Description: =DC=
+  Internet address is 10.2.10.1/24
+  MTU 1500 bytes, BW 1000000 Kbit/sec, DLY 10 usec,
+     reliability 255/255, txload 1/255, rxload 1/255
+  Encapsulation ARPA, loopback not set
+  Keepalive not supported
+  ARP type: ARPA, ARP Timeout 04:00:00
+  Last input 01:11:40, output never, output hang never
+  Last clearing of "show interface" counters never
+  Input queue: 0/75/0/0 (size/max/drops/flushes); Total output drops: 0
+  Queueing strategy: fifo
+  Output queue: 0/40 (size/max)
+  5 minute input rate 0 bits/sec, 0 packets/sec
+  5 minute output rate 0 bits/sec, 0 packets/sec
+     6303 packets input, 718484 bytes, 0 no buffer
+     Received 0 broadcasts (0 IP multicasts)
+     0 runts, 0 giants, 0 throttles
+     0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored
+     4858 packets output, 553704 bytes, 0 underruns
+     0 output errors, 0 interface resets
+     0 unknown protocol drops
+     0 output buffer failures, 0 output buffers swapped out
+
+COD2-DC#sh etherchannel detail
+                Channel-group listing:
+                ----------------------
+
+Group: 1
+----------
+Group state = L2
+Ports: 2   Maxports = 4
+Port-channels: 1 Max Port-channels = 4
+Protocol:   LACP
+Minimum Links: 0
+
+
+                Ports in the group:
+                -------------------
+Port: Gi0/0
+------------
+
+Port state    = Up Mstr Assoc In-Bndl
+Channel group = 1           Mode = Active          Gcchange = -
+Port-channel  = Po1         GC   =   -             Pseudo port-channel = Po1
+Port index    = 0           Load = 0x00            Protocol =   LACP
+
+Flags:  S - Device is sending Slow LACPDUs   F - Device is sending fast LACPDUs.
+        A - Device is in active mode.        P - Device is in passive mode.
+
+Local information:
+                            LACP port     Admin     Oper    Port        Port
+Port      Flags   State     Priority      Key       Key     Number      State
+Gi0/0     SA      bndl      32768         0x1       0x1     0x1         0x3D
+
+Partner's information:
+
+                  LACP port                        Admin  Oper   Port    Port
+Port      Flags   Priority  Dev ID          Age    key    Key    Number  State
+Gi0/0     SA      32768     0000.0000.3402  18s    0x0    0x2    0x8     0x3D
+
+Age of the port in the current state: 0d:01h:14m:24s
+
+Port: Gi0/1
+------------
+
+Port state    = Up Mstr Assoc In-Bndl
+Channel group = 1           Mode = Active          Gcchange = -
+Port-channel  = Po1         GC   =   -             Pseudo port-channel = Po1
+Port index    = 0           Load = 0x00            Protocol =   LACP
+
+Flags:  S - Device is sending Slow LACPDUs   F - Device is sending fast LACPDUs.
+        A - Device is in active mode.        P - Device is in passive mode.
+
+Local information:
+                            LACP port     Admin     Oper    Port        Port
+Port      Flags   State     Priority      Key       Key     Number      State
+Gi0/1     SA      bndl      32768         0x1       0x1     0x2         0x3D
+
+Partner's information:
+
+                  LACP port                        Admin  Oper   Port    Port
+Port      Flags   Priority  Dev ID          Age    key    Key    Number  State
+Gi0/1     SA      32768     0000.0000.3402  21s    0x0    0x2    0x8     0x3D
+
+Age of the port in the current state: 0d:01h:29m:46s
+
+                Port-channels in the group:
+                ---------------------------
+
+Port-channel: Po1    (Primary Aggregator)
+
+------------
+
+Age of the Port-channel   = 0d:01h:29m:56s
+Logical slot/port   = 16/0          Number of ports = 2
+HotStandBy port = null
+Port state          = Port-channel Ag-Inuse
+Protocol            =   LACP
+Port security       = Disabled
+Load share deferral = Disabled
+
+Ports in the Port-channel:
+
+Index   Load   Port     EC state        No of bits
+------+------+------+------------------+-----------
+  0     00     Gi0/0    Active             0
+  0     00     Gi0/1    Active             0
+
+Time since last port bundled:    0d:01h:14m:24s    Gi0/0
+Time since last port Un-bundled: 0d:01h:20m:10s    Gi0/0
 ```
+Данные с сервера COD2-WWW, что видим:
+- порты в сторону Leaf3-4 UP;
+- Port-channel 1 UP, оба линка bundled, active;
+- SVI Vl20 UP;
+- проходит ping до COD2-DC. В дампах на стороне COD2-WWW видим, что request балансируются между leaf3-4, а вот replay приходят строго через Leaf3.
+```
+COD2-WWW#sh int desc
+Interface                      Status         Protocol Description
+Gi0/0                          up             up       =Leaf3_Eth7=
+Gi0/1                          up             up       =Leaf4_Eth7=
+Gi0/2                          down           down
+Gi0/3                          down           down
+Gi1/0                          down           down
+Gi1/1                          down           down
+Gi1/2                          down           down
+Gi1/3                          down           down
+Po1                            up             up       =MH_Leaf3-4_Po1=
+Vl20                           up             up       =WWW_SRV=
+COD2-WWW#sh ip int bri
+Interface              IP-Address      OK? Method Status                Protocol
+GigabitEthernet0/0     unassigned      YES unset  up                    up
+GigabitEthernet0/1     unassigned      YES unset  up                    up
+GigabitEthernet0/2     unassigned      YES unset  down                  down
+GigabitEthernet0/3     unassigned      YES unset  down                  down
+GigabitEthernet1/0     unassigned      YES unset  down                  down
+GigabitEthernet1/1     unassigned      YES unset  down                  down
+GigabitEthernet1/2     unassigned      YES unset  down                  down
+GigabitEthernet1/3     unassigned      YES unset  down                  down
+Port-channel1          unassigned      YES unset  up                    up
+Vlan20                 10.2.20.1       YES TFTP   up                    up
+
+COD2-WWW#sh int vlan20
+Vlan20 is up, line protocol is up
+  Hardware is Ethernet SVI, address is 5017.8a00.8014 (bia 5017.8a00.8014)
+  Description: =WWW_SRV=
+  Internet address is 10.2.20.1/24
+  MTU 1500 bytes, BW 1000000 Kbit/sec, DLY 10 usec,
+     reliability 255/255, txload 1/255, rxload 1/255
+  Encapsulation ARPA, loopback not set
+  Keepalive not supported
+  ARP type: ARPA, ARP Timeout 04:00:00
+  Last input 01:17:18, output never, output hang never
+  Last clearing of "show interface" counters never
+  Input queue: 0/75/0/0 (size/max/drops/flushes); Total output drops: 0
+  Queueing strategy: fifo
+  Output queue: 0/40 (size/max)
+  5 minute input rate 0 bits/sec, 0 packets/sec
+  5 minute output rate 0 bits/sec, 0 packets/sec
+     3133 packets input, 357108 bytes, 0 no buffer
+     Received 0 broadcasts (0 IP multicasts)
+     0 runts, 0 giants, 0 throttles
+     0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored
+     3164 packets output, 358968 bytes, 0 underruns
+     0 output errors, 0 interface resets
+     0 unknown protocol drops
+     0 output buffer failures, 0 output buffers swapped out
+
+COD2-WWW#sh etherchannel detail
+                Channel-group listing:
+                ----------------------
+
+Group: 1
+----------
+Group state = L2
+Ports: 2   Maxports = 4
+Port-channels: 1 Max Port-channels = 4
+Protocol:   LACP
+Minimum Links: 0
+
+
+                Ports in the group:
+                -------------------
+Port: Gi0/0
+------------
+
+Port state    = Up Mstr Assoc In-Bndl
+Channel group = 1           Mode = Active          Gcchange = -
+Port-channel  = Po1         GC   =   -             Pseudo port-channel = Po1
+Port index    = 0           Load = 0x00            Protocol =   LACP
+
+Flags:  S - Device is sending Slow LACPDUs   F - Device is sending fast LACPDUs.
+        A - Device is in active mode.        P - Device is in passive mode.
+
+Local information:
+                            LACP port     Admin     Oper    Port        Port
+Port      Flags   State     Priority      Key       Key     Number      State
+Gi0/0     SA      bndl      32768         0x1       0x1     0x1         0x3D
+
+Partner's information:
+
+                  LACP port                        Admin  Oper   Port    Port
+Port      Flags   Priority  Dev ID          Age    key    Key    Number  State
+Gi0/0     SA      32768     0000.0000.3401  27s    0x0    0x1    0x7     0x3D
+
+Age of the port in the current state: 0d:01h:19m:29s
+
+Port: Gi0/1
+------------
+
+Port state    = Up Mstr Assoc In-Bndl
+Channel group = 1           Mode = Active          Gcchange = -
+Port-channel  = Po1         GC   =   -             Pseudo port-channel = Po1
+Port index    = 0           Load = 0x00            Protocol =   LACP
+
+Flags:  S - Device is sending Slow LACPDUs   F - Device is sending fast LACPDUs.
+        A - Device is in active mode.        P - Device is in passive mode.
+
+Local information:
+                            LACP port     Admin     Oper    Port        Port
+Port      Flags   State     Priority      Key       Key     Number      State
+Gi0/1     SA      bndl      32768         0x1       0x1     0x2         0x3D
+
+Partner's information:
+
+                  LACP port                        Admin  Oper   Port    Port
+Port      Flags   Priority  Dev ID          Age    key    Key    Number  State
+Gi0/1     SA      32768     0000.0000.3401  26s    0x0    0x1    0x7     0x3D
+
+Age of the port in the current state: 0d:01h:38m:16s
+
+                Port-channels in the group:
+                ---------------------------
+
+Port-channel: Po1    (Primary Aggregator)
+
+------------
+
+Age of the Port-channel   = 0d:05h:48m:49s
+Logical slot/port   = 16/0          Number of ports = 2
+HotStandBy port = null
+Port state          = Port-channel Ag-Inuse
+Protocol            =   LACP
+Port security       = Disabled
+Load share deferral = Disabled
+
+Ports in the Port-channel:
+
+Index   Load   Port     EC state        No of bits
+------+------+------+------------------+-----------
+  0     00     Gi0/0    Active             0
+  0     00     Gi0/1    Active             0
+
+Time since last port bundled:    0d:01h:19m:29s    Gi0/0
+Time since last port Un-bundled: 0d:01h:25m:15s    Gi0/0
+```
+<img width="2161" height="2086" alt="image" src="https://github.com/user-attachments/assets/0cbe2ced-42cd-456e-84d2-1f4138e1d92e" />
