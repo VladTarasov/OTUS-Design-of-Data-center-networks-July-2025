@@ -11,8 +11,7 @@
 ## 1. Дизайн
 
 ### Схема
-<img width="1901" height="1765" alt="image" src="https://github.com/user-attachments/assets/cbe4bd7d-a139-4dfc-bcfb-e498b6bf34bd" />
-
+<img width="1833" height="1784" alt="image" src="https://github.com/user-attachments/assets/c0fe526a-7bfa-4354-a033-ad68b8b11e9b" />
 
 ### Адресное пространство
 Распределение адресов для loopback интерфейсов /32:
