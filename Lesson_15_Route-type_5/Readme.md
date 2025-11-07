@@ -30,22 +30,32 @@
 | Eth4             |         |          |          | 10.2.1.4 | 10.2.2.4 |
 
 Распределение адресов для подключения нагрузки к фабрике (Хосты, маршрутизаторы, FW):
+- VLAN 10 192.168.10.0/24 - Подсеть 10 vrf Client_1
+- VLAN 20 192.168.10.0/24 - Подсеть 20 vrf Client_1
+- VLAN 11 192.168.11.0/24 - Подсеть 10 vrf Client_2
+- VLAN 21 192.168.21.0/24 - Подсеть 20 vrf Client_2
+- 192.168.255.0/31 - стык RT-EDGE с VRF Client_1   
+- 192.168.255.2/31 - стык RT-EDGE с VRF Client_2 
 
-VLAN 10 192.168.10.0/24 - Подсеть 10 vrf Client_1
-VLAN 20 192.168.10.0/24 - Подсеть 20 vrf Client_1
-VLAN 11 192.168.11.0/24 - Подсеть 10 vrf Client_2
-VLAN 21 192.168.21.0/24 - Подсеть 20 vrf Client_2
-VLAN -  192.168.255.0/24 le 30 - подсети для p2p L3 соединений с другим сетевым оборудованием (маршурутизаторы, FW)                                                                                                                                                                                                                                                                                                                                                                                                                                                         
+VxLAN VLAN and VRF mapping:
+- vxlan vlan 10 vni 10010
+- vxlan vlan 11 vni 10011
+- vxlan vlan 20 vni 10020
+- vxlan vlan 21 vni 10021
+- vxlan vrf Client_1 vni 101
+- vxlan vrf Client_2 vni 102
+
 ### Протоколы и общие замечания
-Задача - организовать связность между хостами, принадлежащими разным vrf, через внешнее относительно фабрики устройство.\
-Решение - подключить к фабрике двумя линками в разных vrf маршрутизатор, построить ibgp соседсво с boarder leaf, назначив машрутизатор RR, для отражения маршрутов.
+**Задача** - организовать связность между хостами, принадлежащими разным VRF, через пограничный маршрутизатор.\
+**Решение (план работ)** 
 - Underlay сеть посроена на eBGP из предыдущих ДЗ.
 - BFD отключен для экономии ресурсов стенда.
 - Для распространения BUM используем Ingress Replication.
 - Модель EVPN L2 сервиса VLAN-based.
 - Модель EVPN L3 сервиса Edge-routed Briging Symetric IRB.
 - Leaf3 выступает в качетсве boarder leaf.
-- Связность с пограничным маршрутизатором построена на iBGP, маршрутизатор выступает в качетсве отражателя маршрутов, а leaf3 его клиентов в каждом vrf.
+- Подключить маршрутизатор к Leaf3 двумя линками в разных VRF, построить ibgp соседсво, назначив машрутизатор RR-server, а Leaf3 в каждом VRF RR-client, для отражения маршрутов.
+- На Leaf3 в каждом VRF на BGP стыке с маршрутизатором настроить route-map, очищающий AS-path. В противном случаем маршрут не сможет вернуться обратно в фабрику, так как в AS-path будут повторяться номера AS Spine и Leaf.
 
 ## 2. Конфигурация
 В дополенение к конфигурации EVPN L3 VNI Необходимо:\
@@ -367,6 +377,7 @@ router bgp 65103
 Выполняются следующие условия:
 - На RT-EDGE присутствуют маршурты из обоих VRF.
 - В таблице маршрутизации на каждом Leaf в каждом VRF присутствует маршруты из другого VRF.
+- На пограничном маршрутизаторе для принятых из фабрики и отправленных обратно маршрутов наблюдаем "чистый" AS-path.
 - C хостов доступны хосты, находящиеся с ними в одном VLAN И VRF.
 - C хостов доступны хосты, находящиеся с ними в разных VLAN И VRF.
 
@@ -500,6 +511,69 @@ Codes: C - connected, S - static, K - kernel,
  B I      192.168.20.1/32 [200/0] via 192.168.255.3, Ethernet7
  B I      192.168.20.0/24 [200/0] via 192.168.255.3, Ethernet7
  B I      192.168.255.0/31 [200/0] via 192.168.255.3, Ethernet7
+
+RT-EDGE#sh ip bgp neighbors 192.168.255.0 received-routes
+BGP table version is 7, local router ID is 192.168.255.255
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
+
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>i 192.168.10.0     192.168.255.0                 100      0 i
+ *>i 192.168.20.0     192.168.255.0                 100      0 i
+
+Total number of prefixes 2
+RT-EDGE#sh ip bgp neighbors 192.168.255.2 received-routes
+BGP table version is 7, local router ID is 192.168.255.255
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
+
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>i 192.168.11.0     192.168.255.2                 100      0 i
+ *>i 192.168.21.0     192.168.255.2                 100      0 i
+
+Total number of prefixes 2
+
+RT-EDGE#sh ip bgp neighbors 192.168.255.0 advertised-routes
+BGP table version is 7, local router ID is 192.168.255.255
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
+
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>i 192.168.10.0     192.168.255.0                 100      0 i
+ *>i 192.168.11.0     192.168.255.2                 100      0 i
+ *>i 192.168.20.0     192.168.255.0                 100      0 i
+ *>i 192.168.21.0     192.168.255.2                 100      0 i
+ *>  192.168.255.0/31 0.0.0.0                  0         32768 ?
+ *>  192.168.255.2/31 0.0.0.0                  0         32768 ?
+
+Total number of prefixes 6
+
+RT-EDGE#sh ip bgp neighbors 192.168.255.2 advertised-routes
+BGP table version is 7, local router ID is 192.168.255.255
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
+
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>i 192.168.10.0     192.168.255.0                 100      0 i
+ *>i 192.168.11.0     192.168.255.2                 100      0 i
+ *>i 192.168.20.0     192.168.255.0                 100      0 i
+ *>i 192.168.21.0     192.168.255.2                 100      0 i
+ *>  192.168.255.0/31 0.0.0.0                  0         32768 ?
+ *>  192.168.255.2/31 0.0.0.0                  0         32768 ?
+
+Total number of prefixes 6
 
 
 Host10.1 : 192.168.10.1 255.255.255.0 gateway 192.168.10.254
