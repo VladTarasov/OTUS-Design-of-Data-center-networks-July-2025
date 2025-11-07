@@ -303,7 +303,8 @@ router bgp 65103
       route-target import evpn 65102:101
       route-target export evpn 65103:101
       neighbor 192.168.255.1 remote-as 65103
-      redistribute connected
+      neighbor 192.168.255.1 route-map AS_path_clear out
+      redistribute connected route-map C2B
       !
       address-family ipv4
          neighbor 192.168.255.1 activate
@@ -314,10 +315,25 @@ router bgp 65103
       route-target import evpn 65102:102
       route-target export evpn 65103:102
       neighbor 192.168.255.3 remote-as 65103
-      redistribute connected
+      neighbor 192.168.255.3 route-map AS_path_clear out
+      redistribute connected route-map C2B_2
       !
       address-family ipv4
          neighbor 192.168.255.3 activate
+
+route-map AS_path_clear permit 10
+   set as-path match all replacement none
+route-map C2B permit 10
+   match ip address prefix-list C2B
+route-map C2B_2 permit 10
+   match ip address prefix-list C2B_2
+
+ip prefix-list C2B
+   seq 10 permit 192.168.10.0/24
+   seq 20 permit 192.168.20.0/24
+ip prefix-list C2B_2
+   seq 10 permit 192.168.21.0/24
+   seq 20 permit 192.168.11.0/24
 ```
 **RT-EDGE**
 ```
@@ -352,10 +368,11 @@ router bgp 65103
 Выполняются следующие условия:
 - На RT-EDGE присутствуют маршурты из обоих VRF.
 - В таблице маршрутизации на каждом Leaf в каждом VRF присутствует маршруты из другого VRF.
-- С хостов в LAN_10 и LAN_20 доступны хосты LAN_11 и LAN_21.
-```
+- C хостов доступны хосты, находящиеся с ними в одном VLAN И VRF.
+- C хостов доступны хосты, находящиеся с ними в разных VLAN И VRF.
 
-RT-EDGE#sh ip route
+```
+RT-EDGE#sh ip route bgp
 Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
        D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
        N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
@@ -368,17 +385,13 @@ Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
 
 Gateway of last resort is not set
 
-B     192.168.10.0/24 [200/0] via 192.168.255.0, 00:00:15
-B     192.168.11.0/24 [200/0] via 192.168.255.2, 00:11:46
-B     192.168.20.0/24 [200/0] via 192.168.255.0, 00:11:45
-B     192.168.21.0/24 [200/0] via 192.168.255.2, 00:00:03
-      192.168.255.0/24 is variably subnetted, 4 subnets, 2 masks
-C        192.168.255.0/31 is directly connected, GigabitEthernet0/0
-L        192.168.255.1/32 is directly connected, GigabitEthernet0/0
-C        192.168.255.2/31 is directly connected, GigabitEthernet0/1
-L        192.168.255.3/32 is directly connected, GigabitEthernet0/1
+B     192.168.10.0/24 [200/0] via 192.168.255.0, 01:01:45
+B     192.168.11.0/24 [200/0] via 192.168.255.2, 00:01:50
+B     192.168.20.0/24 [200/0] via 192.168.255.0, 00:02:22
+B     192.168.21.0/24 [200/0] via 192.168.255.2, 01:01:46
 
-Leaf1#sh ip route vrf Client_1
+
+Leaf1#sh ip route vrf Client_1 bgp
 
 VRF: Client_1
 Codes: C - connected, S - static, K - kernel,
@@ -393,15 +406,13 @@ Codes: C - connected, S - static, K - kernel,
        DP - Dynamic Policy Route, L - VRF Leaked,
        G  - gRIBI, RC - Route Cache Route
 
-Gateway of last resort is not set
-
- C        192.168.10.0/24 is directly connected, Vlan10
+ B E      192.168.11.0/24 [200/0] via VTEP 10.0.1.3 VNI 101 router-mac 50:1e:49:b9:09:14 local-interface Vxlan1
  B E      192.168.20.0/24 [200/0] via VTEP 10.0.1.2 VNI 101 router-mac 50:ed:8c:5a:89:4d local-interface Vxlan1
  B E      192.168.21.0/24 [200/0] via VTEP 10.0.1.3 VNI 101 router-mac 50:1e:49:b9:09:14 local-interface Vxlan1
  B E      192.168.255.0/31 [200/0] via VTEP 10.0.1.3 VNI 101 router-mac 50:1e:49:b9:09:14 local-interface Vxlan1
  B E      192.168.255.2/31 [200/0] via VTEP 10.0.1.3 VNI 101 router-mac 50:1e:49:b9:09:14 local-interface Vxlan1
 
-Leaf1#sh ip route vrf Client_2
+Leaf1#sh ip route vrf Client_2 bgp
 
 VRF: Client_2
 Codes: C - connected, S - static, K - kernel,
@@ -416,15 +427,17 @@ Codes: C - connected, S - static, K - kernel,
        DP - Dynamic Policy Route, L - VRF Leaked,
        G  - gRIBI, RC - Route Cache Route
 
-Gateway of last resort is not set
-
+ B E      192.168.10.1/32 [200/0] via VTEP 10.0.1.3 VNI 102 router-mac 50:1e:49:b9:09:14 local-interface Vxlan1
  B E      192.168.10.0/24 [200/0] via VTEP 10.0.1.3 VNI 102 router-mac 50:1e:49:b9:09:14 local-interface Vxlan1
- C        192.168.11.0/24 is directly connected, Vlan11
+ B E      192.168.20.1/32 [200/0] via VTEP 10.0.1.3 VNI 102 router-mac 50:1e:49:b9:09:14 local-interface Vxlan1
+ B E      192.168.20.0/24 [200/0] via VTEP 10.0.1.3 VNI 102 router-mac 50:1e:49:b9:09:14 local-interface Vxlan1
+ B E      192.168.21.1/32 [200/0] via VTEP 10.0.1.3 VNI 102 router-mac 50:1e:49:b9:09:14 local-interface Vxlan1
  B E      192.168.21.0/24 [200/0] via VTEP 10.0.1.3 VNI 102 router-mac 50:1e:49:b9:09:14 local-interface Vxlan1
  B E      192.168.255.0/31 [200/0] via VTEP 10.0.1.3 VNI 102 router-mac 50:1e:49:b9:09:14 local-interface Vxlan1
  B E      192.168.255.2/31 [200/0] via VTEP 10.0.1.3 VNI 102 router-mac 50:1e:49:b9:09:14 local-interface Vxlan1
 
-Leaf2#sh ip route vrf Client_1
+
+Leaf2#sh ip route vrf Client_1 bgp
 
 VRF: Client_1
 Codes: C - connected, S - static, K - kernel,
@@ -439,15 +452,13 @@ Codes: C - connected, S - static, K - kernel,
        DP - Dynamic Policy Route, L - VRF Leaked,
        G  - gRIBI, RC - Route Cache Route
 
-Gateway of last resort is not set
-
- C        192.168.10.0/24 is directly connected, Vlan10
- C        192.168.20.0/24 is directly connected, Vlan20
+ B E      192.168.11.0/24 [200/0] via VTEP 10.0.1.3 VNI 101 router-mac 50:1e:49:b9:09:14 local-interface Vxlan1
  B E      192.168.21.0/24 [200/0] via VTEP 10.0.1.3 VNI 101 router-mac 50:1e:49:b9:09:14 local-interface Vxlan1
  B E      192.168.255.0/31 [200/0] via VTEP 10.0.1.3 VNI 101 router-mac 50:1e:49:b9:09:14 local-interface Vxlan1
  B E      192.168.255.2/31 [200/0] via VTEP 10.0.1.3 VNI 101 router-mac 50:1e:49:b9:09:14 local-interface Vxlan1
 
-Leaf3#sh ip route vrf Client_1
+
+Leaf3#sh ip route vrf Client_1 bgp
 
 VRF: Client_1
 Codes: C - connected, S - static, K - kernel,
@@ -462,16 +473,13 @@ Codes: C - connected, S - static, K - kernel,
        DP - Dynamic Policy Route, L - VRF Leaked,
        G  - gRIBI, RC - Route Cache Route
 
-Gateway of last resort is not set
-
- C        192.168.10.0/24 is directly connected, Vlan10
  B I      192.168.11.0/24 [200/0] via 192.168.255.1, Ethernet8
  B E      192.168.20.0/24 [200/0] via VTEP 10.0.1.2 VNI 101 router-mac 50:ed:8c:5a:89:4d local-interface Vxlan1
  B I      192.168.21.0/24 [200/0] via 192.168.255.1, Ethernet8
- C        192.168.255.0/31 is directly connected, Ethernet8
  B I      192.168.255.2/31 [200/0] via 192.168.255.1, Ethernet8
 
-Leaf3#sh ip route vrf Client_2
+
+Leaf3#sh ip route vrf Client_2 bgp
 
 VRF: Client_2
 Codes: C - connected, S - static, K - kernel,
@@ -486,49 +494,80 @@ Codes: C - connected, S - static, K - kernel,
        DP - Dynamic Policy Route, L - VRF Leaked,
        G  - gRIBI, RC - Route Cache Route
 
-Gateway of last resort is not set
-
+ B I      192.168.10.1/32 [200/0] via 192.168.255.3, Ethernet7
  B I      192.168.10.0/24 [200/0] via 192.168.255.3, Ethernet7
+ B E      192.168.11.1/32 [200/0] via VTEP 10.0.1.1 VNI 102 router-mac 02:00:00:be:5f:db local-interface Vxlan1
  B E      192.168.11.0/24 [200/0] via VTEP 10.0.1.1 VNI 102 router-mac 02:00:00:be:5f:db local-interface Vxlan1
+ B I      192.168.20.1/32 [200/0] via 192.168.255.3, Ethernet7
  B I      192.168.20.0/24 [200/0] via 192.168.255.3, Ethernet7
- C        192.168.21.0/24 is directly connected, Vlan21
  B I      192.168.255.0/31 [200/0] via 192.168.255.3, Ethernet7
- C        192.168.255.2/31 is directly connected, Ethernet7
 
-Host10.1> ping 192.168.11.1
 
-*192.168.10.254 icmp_seq=1 ttl=64 time=9.676 ms (ICMP type:3, code:0, Destination network unreachable)
-*192.168.10.254 icmp_seq=2 ttl=64 time=11.796 ms (ICMP type:3, code:0, Destination network unreachable)
-*192.168.10.254 icmp_seq=3 ttl=64 time=14.023 ms (ICMP type:3, code:0, Destination network unreachable)
-*192.168.10.254 icmp_seq=4 ttl=64 time=13.833 ms (ICMP type:3, code:0, Destination network unreachable)
-*192.168.10.254 icmp_seq=5 ttl=64 time=12.452 ms (ICMP type:3, code:0, Destination network unreachable)
+Host10.1 : 192.168.10.1 255.255.255.0 gateway 192.168.10.254
+
+Host10.1> ping 192.168.10.2
+
+84 bytes from 192.168.10.2 icmp_seq=1 ttl=64 time=18.156 ms
+84 bytes from 192.168.10.2 icmp_seq=2 ttl=64 time=11.556 ms
+84 bytes from 192.168.10.2 icmp_seq=3 ttl=64 time=11.307 ms
+84 bytes from 192.168.10.2 icmp_seq=4 ttl=64 time=11.704 ms
+84 bytes from 192.168.10.2 icmp_seq=5 ttl=64 time=11.157 ms
+
+Host10.1> ping 192.168.10.3
+
+84 bytes from 192.168.10.3 icmp_seq=1 ttl=64 time=12.837 ms
+84 bytes from 192.168.10.3 icmp_seq=2 ttl=64 time=11.153 ms
+84 bytes from 192.168.10.3 icmp_seq=3 ttl=64 time=11.575 ms
+84 bytes from 192.168.10.3 icmp_seq=4 ttl=64 time=10.622 ms
+84 bytes from 192.168.10.3 icmp_seq=5 ttl=64 time=11.153 ms
+
+Host10.1> ping 192.168.20.1
+
+84 bytes from 192.168.20.1 icmp_seq=1 ttl=62 time=22.408 ms
+84 bytes from 192.168.20.1 icmp_seq=2 ttl=62 time=12.031 ms
+84 bytes from 192.168.20.1 icmp_seq=3 ttl=62 time=12.060 ms
+84 bytes from 192.168.20.1 icmp_seq=4 ttl=62 time=152.140 ms
+84 bytes from 192.168.20.1 icmp_seq=5 ttl=62 time=13.976 ms
 
 Host10.1> ping 192.168.21.1
 
-84 bytes from 192.168.21.1 icmp_seq=1 ttl=60 time=155.472 ms
-84 bytes from 192.168.21.1 icmp_seq=2 ttl=60 time=84.882 ms
-84 bytes from 192.168.21.1 icmp_seq=3 ttl=60 time=16.426 ms
-84 bytes from 192.168.21.1 icmp_seq=4 ttl=60 time=44.650 ms
-84 bytes from 192.168.21.1 icmp_seq=5 ttl=60 time=74.156 ms
+84 bytes from 192.168.21.1 icmp_seq=1 ttl=60 time=48.978 ms
+84 bytes from 192.168.21.1 icmp_seq=2 ttl=60 time=27.201 ms
+84 bytes from 192.168.21.1 icmp_seq=3 ttl=60 time=17.419 ms
+84 bytes from 192.168.21.1 icmp_seq=4 ttl=60 time=15.079 ms
+84 bytes from 192.168.21.1 icmp_seq=5 ttl=60 time=19.589 ms
 
-Host_20.1 : 192.168.20.1 255.255.255.0 gateway 192.168.20.254
+Host10.1> ping 192.168.11.1
 
-Host_20.1> ping 192.168.11.1
+84 bytes from 192.168.11.1 icmp_seq=1 ttl=59 time=39.796 ms
+84 bytes from 192.168.11.1 icmp_seq=2 ttl=59 time=22.510 ms
+84 bytes from 192.168.11.1 icmp_seq=3 ttl=59 time=23.814 ms
+84 bytes from 192.168.11.1 icmp_seq=4 ttl=59 time=25.684 ms
+84 bytes from 192.168.11.1 icmp_seq=5 ttl=59 time=22.929 ms
 
-*192.168.20.254 icmp_seq=1 ttl=64 time=7.687 ms (ICMP type:3, code:0, Destination network unreachable)
-*192.168.20.254 icmp_seq=2 ttl=64 time=18.444 ms (ICMP type:3, code:0, Destination network unreachable)
-*192.168.20.254 icmp_seq=3 ttl=64 time=9.186 ms (ICMP type:3, code:0, Destination network unreachable)
-*192.168.20.254 icmp_seq=4 ttl=64 time=15.403 ms (ICMP type:3, code:0, Destination network unreachable)
-*192.168.20.254 icmp_seq=5 ttl=64 time=17.144 ms (ICMP type:3, code:0, Destination network unreachable)
+Host_11.1 : 192.168.11.1 255.255.255.0 gateway 192.168.11.254
 
-Host_20.1>  ping 192.168.21.1
+Host_11.1> ping 192.168.21.1
 
-84 bytes from 192.168.21.1 icmp_seq=1 ttl=60 time=44.150 ms
-84 bytes from 192.168.21.1 icmp_seq=2 ttl=60 time=64.256 ms
-84 bytes from 192.168.21.1 icmp_seq=3 ttl=60 time=74.307 ms
-84 bytes from 192.168.21.1 icmp_seq=4 ttl=60 time=67.193 ms
-84 bytes from 192.168.21.1 icmp_seq=5 ttl=60 time=31.808 ms
+84 bytes from 192.168.21.1 icmp_seq=1 ttl=62 time=44.302 ms
+84 bytes from 192.168.21.1 icmp_seq=2 ttl=62 time=33.509 ms
+84 bytes from 192.168.21.1 icmp_seq=3 ttl=62 time=11.143 ms
+84 bytes from 192.168.21.1 icmp_seq=4 ttl=62 time=11.949 ms
+84 bytes from 192.168.21.1 icmp_seq=5 ttl=62 time=17.991 ms
 
+Host_11.1> ping 192.168.20.1
+
+84 bytes from 192.168.20.1 icmp_seq=1 ttl=59 time=46.203 ms
+84 bytes from 192.168.20.1 icmp_seq=2 ttl=59 time=33.089 ms
+84 bytes from 192.168.20.1 icmp_seq=3 ttl=59 time=23.320 ms
+84 bytes from 192.168.20.1 icmp_seq=4 ttl=59 time=22.649 ms
+84 bytes from 192.168.20.1 icmp_seq=5 ttl=59 time=33.501 ms
+
+Host_11.1> ping 192.168.10.1
+
+84 bytes from 192.168.10.1 icmp_seq=1 ttl=59 time=29.501 ms
+84 bytes from 192.168.10.1 icmp_seq=2 ttl=59 time=21.465 ms
+84 bytes from 192.168.10.1 icmp_seq=3 ttl=59 time=24.123 ms
+84 bytes from 192.168.10.1 icmp_seq=4 ttl=59 time=22.928 ms
+84 bytes from 192.168.10.1 icmp_seq=5 ttl=59 time=24.408 ms
 ```
-По неустановленной причине наблюдается только частичная связность между vrf. \
-Удалось заметить, что на leaf3 все маршруты присутствуют, но на другие leaf попадает только по одной сети, хотя в bgp update инфрмация о подсетях передается.
